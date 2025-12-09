@@ -37,8 +37,11 @@ class GenauTapiModel: NSObject, ObservableObject, SFSpeechRecognizerDelegate, AV
     override init() {
         super.init()
         speechSynthesizer.delegate = self
-        setupSpeech()
-        checkStreak()
+        // Defer heavy operations - don't block launch
+        DispatchQueue.main.async {
+            self.setupSpeech()
+            self.checkStreak()
+        }
     }
     
     // MARK: - Speech Recognition
@@ -46,8 +49,11 @@ class GenauTapiModel: NSObject, ObservableObject, SFSpeechRecognizerDelegate, AV
         speechRecognizer = SFSpeechRecognizer(locale: Locale(identifier: sourceLang))
         speechRecognizer?.delegate = self
         
+        // Request authorization asynchronously
         SFSpeechRecognizer.requestAuthorization { authStatus in
-            // Handle auth status
+            DispatchQueue.main.async {
+                // Authorization complete - ready to record
+            }
         }
     }
     
@@ -170,9 +176,27 @@ class GenauTapiModel: NSObject, ObservableObject, SFSpeechRecognizerDelegate, AV
         }
         
         let utterance = AVSpeechUtterance(string: text)
-        // Force German voice regardless of targetLang setting
-        utterance.voice = AVSpeechSynthesisVoice(language: "de-DE")
-        utterance.rate = 0.5 // Slightly slower for learning
+        
+        // Use enhanced German voice for better quality
+        // Try to find Anna (female) or Martin (male) - iOS enhanced voices
+        let preferredVoices = ["Anna", "Martin", "Helena"]
+        var selectedVoice: AVSpeechSynthesisVoice?
+        
+        for voiceName in preferredVoices {
+            if let voice = AVSpeechSynthesisVoice.speechVoices().first(where: { 
+                $0.language == "de-DE" && $0.name.contains(voiceName) 
+            }) {
+                selectedVoice = voice
+                break
+            }
+        }
+        
+        // Fallback to default German voice
+        utterance.voice = selectedVoice ?? AVSpeechSynthesisVoice(language: "de-DE")
+        utterance.rate = 0.48 // Natural speaking pace
+        utterance.pitchMultiplier = 1.0 // Natural pitch
+        utterance.volume = 1.0
+        
         speechSynthesizer.speak(utterance)
     }
     
