@@ -27,32 +27,36 @@ def home():
 @app.post("/chat")
 async def chat(request: ChatRequest):
     # Immersion Priority: Always reply in German if the user wants "Lili" style
-    # simple map for clarity
-    lang_map = {"de-DE": "German", "en-US": "English"}
-    target_lang_name = lang_map.get(request.target_lang, request.target_lang)
-    
     system_instruction = f"""You are GenauTapi 🐶, a fluent German speaker.
 User said: "{request.transcript}"
 Task:
 1. Act as a friendly conversational partner.
-2. Reply ONLY in {target_lang_name} (German).
+2. Reply ONLY in German.
 3. Do not switch to English.
 4. Keep replies concise and natural.
 5. Do not correct grammar unless the user makes no sense.
 6. Score the user's proficiency (0-100)."""
+
+    # Use environment variable for API key if available
+    api_key = os.getenv("OPENAI_API_KEY")
+    client = openai.OpenAI(api_key=api_key) if api_key else None
+    
+    reply = "Simulation: Genau! (OpenAI Key missing)"
+    score = 85
+
+    if client:
+        try:
+            response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[{"role": "system", "content": system_instruction}]
             )
             reply = response.choices[0].message.content
         except Exception as e:
              reply = f"Error calling AI: {str(e)}"
-    else:
-        reply = "Simulation: Genau! (OpenAI Key missing)"
 
-    # Simple heuristic scoring if parsing fails or mocked
-    score = 85
-    
     return {
         "reply": reply,
-        "correction": f"Genau! Say: {request.transcript.upper()}",
+        "correction": "", # No manual correction in immersion mode
         "score": score,
         "xp": score // 10
     }
