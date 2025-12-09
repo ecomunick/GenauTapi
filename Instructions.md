@@ -1,46 +1,43 @@
-# GenauTapi - AI Speech Coach (German↔English) 🐶
+# GenauTapi - AI German Speech Coach 🐶
 
 ## 🚀 AGENT AUTOPILOT MODE
 **BUILD COMPLETE MVP WITHOUT USER INPUT.** Data science user, no iOS experience. Handle all SwiftUI, APIs, deployment autonomously.
 
-## FINAL MVP SCOPE (All features, no phases)
-✅ Language toggle: DE→EN / EN→DE
-✅ 3 Topics: "Daily Life", "Shopping", "Job Interview"
-✅ Speak → AI corrects → TTS reply + score
-✅ XP bar + daily streak
-✅ Backend API live on Render.com
-✅ iPhone-ready Xcode project
-✅ Dog-themed UI (Tapi mascot)
+## FINAL MVP SCOPE (v1.0 - German Immersion)
+✅ **German-Only Immersion**: Speak German, hear German replies
+✅ **No Topics**: Free conversation mode (like Duolingo's Lili)
+✅ **AI Conversation**: Natural German chat with dynamic scoring
+✅ **TTS in German**: Always uses German voice (de-DE)
+✅ **XP + Streaks**: Gamification with daily tracking
+✅ **Backend API**: Live on Render.com
+✅ **iPhone-ready**: Xcode project with signing guide
+✅ **Dog-themed UI**: Tapi mascot 🐶
 
-text
+---
 
 ## FULL AUTONOMOUS TASK LIST
 
 ### 1. PROJECT SETUP (5 min)
-Rename project: GenauTapi everywhere
+- Rename project: GenauTapi everywhere
+- Add dog emoji 🐶 to app name/title
+- Git commit: `feat: rebrand-to-genautapi`
 
-Add dog emoji 🐶 to app name/title
+---
 
-Create app icon: Cute dog with speech bubble + "Genau!"
+### 2. BACKEND (Python - FastAPI)
+Create `backend/` folder → COMPLETE FastAPI app:
 
-Git commit: "feat: rebrand-to-genautapi"
-
-text
-
-### 2. BACKEND (Python - Your Comfort Zone)
-Create backend/ folder → COMPLETE FastAPI app:
-
-main.py:
-
-python
+**main.py:**
+```python
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import os
-import openai  # or requests to Perplexity API
+import openai
+import re
 
 app = FastAPI()
-app.add_middleware(CORSMiddleware, allow_origins=["*"])
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 class ChatRequest(BaseModel):
     transcript: str
@@ -48,131 +45,141 @@ class ChatRequest(BaseModel):
     target_lang: str
     topic: str
 
-TOPICS = {
-    "Daily Life": "Act as friendly neighbor chatting about weather, family, weekend plans",
-    "Shopping": "Act as German supermarket cashier. Keep it simple, correct politely",
-    "Job Interview": "Act as HR manager conducting B1 German job interview. Professional but encouraging"
-}
+@app.get("/")
+def home():
+    return {"message": "GenauTapi Backend is LIVE! 🐶", "status": "Ready to chat"}
 
 @app.post("/chat")
 async def chat(request: ChatRequest):
-    prompt = f"""You are GenauTapi 🐶, patient German-English speech coach.
-Topic: {TOPICS[request.topic]}
-User said (in {request.source_lang}): "{request.transcript}"
-Give short reply in {request.target_lang}, correct grammar, score 0-100."""
+    # German Immersion Mode
+    system_instruction = f"""You are GenauTapi 🐶, a fluent German speaker.
+User said: "{request.transcript}"
+Task:
+1. Act as a friendly conversational partner.
+2. Reply ONLY in German.
+3. Do not switch to English.
+4. Keep replies concise and natural (1-2 sentences max).
+5. Do not correct grammar unless the user makes no sense.
+6. At the END of your response, add a score on a new line in this exact format: [SCORE: XX]
+   where XX is 0-100 based on grammar, vocabulary, and fluency."""
+
+    api_key = os.getenv("OPENAI_API_KEY")
+    client = openai.OpenAI(api_key=api_key) if api_key else None
     
-    # Use Perplexity/OpenAI - add your API key later
-    response = openai.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "system", "content": prompt}]
-    )
-    
-    reply = response.choices[0].message.content
-    score = 85  # Parse from reply or simple heuristic
-    
+    reply = "Simulation: Genau! (OpenAI Key missing)"
+    score = 85
+
+    if client:
+        try:
+            response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[{"role": "system", "content": system_instruction}]
+            )
+            full_reply = response.choices[0].message.content
+            
+            # Parse score from response
+            score_match = re.search(r'\[SCORE:\s*(\d+)\]', full_reply)
+            if score_match:
+                score = int(score_match.group(1))
+                reply = re.sub(r'\s*\[SCORE:\s*\d+\]', '', full_reply).strip()
+            else:
+                reply = full_reply
+                score = 75
+        except Exception as e:
+             reply = f"Error calling AI: {str(e)}"
+
     return {
         "reply": reply,
-        "correction": f"Genau! Say: {request.transcript.upper()}",
+        "correction": "",
         "score": score,
         "xp": score // 10
     }
+```
 
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
-Deploy:
+**Deploy:**
+- `requirements.txt`: fastapi, uvicorn, openai, pydantic
+- `Procfile`: `web: cd backend && uvicorn main:app --host=0.0.0.0 --port=$PORT`
+- Push to Render.com (free tier)
+- Set `OPENAI_API_KEY` environment variable
 
-requirements.txt: fastapi, uvicorn, openai, pydantic
+---
 
-Procfile: web: uvicorn main:app --host=0.0.0.0 --port=$PORT
+### 3. FRONTEND (SwiftUI - Complete App)
 
-Push to Render.com (free tier)
+**MAIN SCREENS:**
+1. **Welcome**: "GenauTapi 🐶" + "🇩🇪 Speak German, Learn German!" + Start button
+2. **Chat**: Microphone button → AI reply (German TTS) + Score display
+3. **Profile**: XP total, streak counter, Tapi dog mascot
 
-Return LIVE_API_URL for frontend
+**KEY FEATURES (implement ALL):**
+- `SFSpeechRecognizer` (de-DE locale for German input)
+- `AVSpeechSynthesizer` (de-DE voice, rate 0.5 for learning)
+- `URLSession` POST to backend `/chat`
+- `UserDefaults`: xp_total, streak_days
+- Dynamic score display from AI response
+- Back button in Chat header to return to Welcome
 
-text
+**REMOVED FEATURES (Simplified for v1):**
+- ❌ Language toggle (German-only now)
+- ❌ Topic selection (Free conversation only)
+- ❌ Correction text display (Immersion mode)
 
-### 3. FRONTEND (SwiftUI - Agents Handle Everything)
-ContentView.swift - COMPLETE app:
-
-MAIN SCREENS:
-
-Welcome: "GenauTapi 🐶 Your Speech Coach!" + Language picker
-
-Topics: ["Daily Life", "Shopping", "Job Interview"]
-
-Chat: Speak button → Loading → AI reply (TTS + text) + XP bar
-
-Profile: XP total, streak counter, Tapi dog mascot
-
-KEY FEATURES (implement ALL):
-
-SFSpeechRecognizer (DE/EN locales)
-
-AVSpeechSynthesizer (voice replies)
-
-URLSession POST to LIVE_API_URL/chat
-
-UserDefaults: xp_total, streak_days, selected_lang
-
-ProgressView for XP (0-100 → green dog emoji at 100)
-
-text
+---
 
 ### 4. UI COPY (Exact Text)
-Welcome: "GenauTapi 🐶 Practice speaking like a local!"
-Language: ["🇩🇪 Deutsch → 🇺🇸 English", "🇺🇸 English → 🇩🇪 Deutsch"]
-Speak button: "🎤 Sprechen!"
-Topics: "🛒 Shopping", "💼 Job Interview", "🏠 Daily Life"
-After reply: "Woof! 🐕 Score: 85/100 🎉"
+- Welcome: "GenauTapi 🐶 Practice speaking like a local!"
+- Subtitle: "🇩🇪 Speak German, Learn German!"
+- Speak button: "🎤 Sprechen!"
+- Chat header: "GenauTapi Chat 🇩🇪"
+- After reply: "Score: XX/100 🎉"
 
-text
+---
 
 ### 5. GIT + DEPLOYMENT WORKFLOW
-EVERY MAJOR TASK:
+**EVERY MAJOR TASK:**
+```bash
 git add . && git commit -m "feat: [TASK_DESCRIPTION]" && git push origin main
+```
 
-FINAL CHECKLIST:
-[ ] Backend live: https://genautapi-backend.onrender.com/chat POST works
-[ ] Xcode builds → Simulator mic/TTS/backend work
-[ ] iPhone USB test ready (free Apple ID)
-[ ] README.md with screenshots + API docs
-[ ] GitHub Pages demo video
+**FINAL CHECKLIST:**
+- [x] Backend live: https://genautapi.onrender.com/ POST works
+- [x] Xcode builds → Simulator/iPhone mic/TTS/backend work
+- [x] German TTS voice (de-DE) working
+- [x] Dynamic AI scoring implemented
+- [x] README.md with setup instructions
+- [x] Xcode guide for beginners
 
-text
+---
 
 ## 🐕 DOG MASCOT ASSETS
-App Icon: Cartoon Tapi dog + speech bubble "Genau!"
-Loading: Tapi wagging tail
-Perfect score: Tapi with medal 🥇
-Streak: Tapi counter "3 Tage! Woof! 🐶"
+- App Icon: Cartoon Tapi dog + speech bubble "Genau!"
+- Profile: Tapi with pawprint icon
+- Streak: Tapi counter "X �"
 
-text
+---
 
 ## AGENT EXECUTION ORDER
-"Read this ENTIRE Instructions.md → confirm understanding"
+1. "Read this ENTIRE Instructions.md → confirm understanding"
+2. "Build COMPLETE backend → deploy Render → return LIVE_API_URL"
+3. "Replace ALL SpeechRecognition code → GenauTapi MVP screens"
+4. "Connect speech → backend → TTS → XP system"
+5. "Polish UI with dog theme + exact copy above"
+6. "Test Simulator → generate iPhone instructions"
+7. "Create README + Xcode guide → FINAL git push"
 
-"Build COMPLETE backend → deploy Render → return LIVE_API_URL"
+---
 
-"Replace ALL SpeechRecognition code → GenauTapi MVP screens"
-
-"Connect speech → backend → TTS → XP system"
-
-"Polish UI with dog theme + exact copy above"
-
-"Test Simulator → generate iPhone instructions"
-
-"Create README + demo GIF → FINAL git push"
-
-
-## SUCCESS CRITERIA
+## SUCCESS CRITERIA (v1.0)
 ✅ App says "GenauTapi 🐶" on launch
-✅ Speak German → AI replies English (or reverse)
-✅ Backend responds <2s with score/XP
+✅ Speak German → AI replies in German (de-DE voice)
+✅ Backend responds <2s with dynamic score/XP
 ✅ XP persists between app restarts
+✅ No language toggle (German-only immersion)
+✅ Free conversation (no topic selection)
+✅ Back button for navigation
 ✅ GitHub repo ready for portfolio
 
-text
+---
 
 ## NO USER INPUT NEEDED
 Execute autonomously. Data science user trusts agents completely.
