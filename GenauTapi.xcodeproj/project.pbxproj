@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		D010DB842B35C6E700955DAE /* SpeechManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D010DB832B35C6E700955DAE /* SpeechManager.swift */; };
+		D010DB842B35C6E700955DAE /* GenauTapiModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D010DB832B35C6E700955DAE /* GenauTapiModel.swift */; };
 		D010DB862B35C72100955DAE /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = D010DB852B35C72100955DAE /* Constants.swift */; };
 		D03A9C532B38827C0074849B /* Settings.bundle in Resources */ = {isa = PBXBuildFile; fileRef = D03A9C522B38827C0074849B /* Settings.bundle */; };
 		D03A9C5D2B3CCB2B0074849B /* Launch Screen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D03A9C5C2B3CCB2B0074849B /* Launch Screen.storyboard */; };
@@ -22,7 +22,7 @@
 
 /* Begin PBXFileReference section */
 		D010DB6A2B3229BE00955DAE /* Speech.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Speech.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS17.2.sdk/System/Library/Frameworks/Speech.framework; sourceTree = DEVELOPER_DIR; };
-		D010DB832B35C6E700955DAE /* SpeechManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SpeechManager.swift; sourceTree = "<group>"; };
+		D010DB832B35C6E700955DAE /* GenauTapiModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GenauTapiModel.swift; sourceTree = "<group>"; };
 		D010DB852B35C72100955DAE /* Constants.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		D03A9C522B38827C0074849B /* Settings.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = Settings.bundle; sourceTree = "<group>"; };
 		D03A9C542B38E4790074849B /* GenauTapi-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "GenauTapi-Info.plist"; sourceTree = SOURCE_ROOT; };
@@ -84,7 +84,7 @@
 				D03A9C5C2B3CCB2B0074849B /* Launch Screen.storyboard */,
 				D0D3D8AD2B2F1859005DA9B3 /* GenauTapiApp.swift */,
 				D0D3D8AF2B2F1859005DA9B3 /* ContentView.swift */,
-				D010DB832B35C6E700955DAE /* SpeechManager.swift */,
+				D010DB832B35C6E700955DAE /* GenauTapiModel.swift */,
 				D0D3D8BE2B2F1D00005DA9B3 /* ConsoleView.swift */,
 				D010DB852B35C72100955DAE /* Constants.swift */,
 				D0D3D8BC2B2F1903005DA9B3 /* Recorder.swift */,
@@ -178,7 +178,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D0D3D8BD2B2F1903005DA9B3 /* Recorder.swift in Sources */,
-				D010DB842B35C6E700955DAE /* SpeechManager.swift in Sources */,
+				D010DB842B35C6E700955DAE /* GenauTapiModel.swift in Sources */,
 				D0D3D8B02B2F1859005DA9B3 /* ContentView.swift in Sources */,
 				D0D3D8BF2B2F1D00005DA9B3 /* ConsoleView.swift in Sources */,
 				D0D3D8AE2B2F1859005DA9B3 /* GenauTapiApp.swift in Sources */,
