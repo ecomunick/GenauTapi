@@ -8,7 +8,7 @@
 import SwiftUI
 
 @main
-struct Speech_RecognitionApp: App {
+struct GenauTapiApp: App {
 
     var body: some Scene {
         WindowGroup {
