@@ -6,13 +6,11 @@ struct ContentView: View {
     
     var body: some View {
         ZStack {
-            Color("Background").ignoresSafeArea() // Ensure you have this color or use system background
+            Color(UIColor.systemBackground).ignoresSafeArea()
             
             switch currentScreen {
             case "welcome":
                 WelcomeView(model: model, currentScreen: $currentScreen)
-            case "topics":
-                TopicView(model: model, currentScreen: $currentScreen)
             case "chat":
                 ChatView(model: model, currentScreen: $currentScreen)
             case "profile":
@@ -71,52 +69,7 @@ struct WelcomeView: View {
     }
 }
 
-// MARK: - Topic View
-struct TopicView: View {
-    @ObservedObject var model: GenauTapiModel
-    @Binding var currentScreen: String
-    
-    let topics = [
-        ("Daily Life", "🏠"),
-        ("Shopping", "🛒"),
-        ("Job Interview", "💼"),
-        ("Free Conversation", "🗣️")
-    ]
-    
-    var body: some View {
-        VStack {
-            Text("Choose a Topic")
-                .font(.title)
-                .bold()
-                .padding()
-            
-            ForEach(topics, id: \.0) { topic, emoji in
-                Button(action: {
-                    model.selectedTopic = topic
-                    currentScreen = "chat"
-                }) {
-                    HStack {
-                        Text(emoji)
-                            .font(.largeTitle)
-                        VStack(alignment: .leading) {
-                            Text(topic)
-                                .font(.headline)
-                        }
-                        Spacer()
-                        Image(systemName: "chevron.right")
-                    }
-                    .padding()
-                    .background(Color(UIColor.secondarySystemBackground))
-                    .cornerRadius(12)
-                    .padding(.horizontal)
-                }
-            }
-            
-            Spacer()
-        }
-        .padding(.top)
-    }
-}
+// TopicView Removed for Immersion Mode
 
 // MARK: - Chat View
 struct ChatView: View {
@@ -127,11 +80,9 @@ struct ChatView: View {
         VStack {
             // Header
             HStack {
-                Button(action: { currentScreen = "topics" }) {
-                    Image(systemName: "arrow.left")
-                }
-                Spacer()
-                Text("\(model.selectedTopic)")
+                // Spacer to balance
+                Spacer() 
+                Text("GenauTapi Chat 🇩🇪")
                     .font(.headline)
                 Spacer()
                 Button(action: { currentScreen = "profile" }) {

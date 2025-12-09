@@ -14,7 +14,7 @@ class GenauTapiModel: NSObject, ObservableObject, SFSpeechRecognizerDelegate, AV
     @Published var showCorrection: Bool = false
     
     // User Settings
-    @Published var selectedTopic: String = "Daily Life"
+    @Published var selectedTopic: String = "Free Conversation"
     @Published var sourceLang: String = "de-DE" // defaulting to German -> English
     @Published var targetLang: String = "en-US"
     

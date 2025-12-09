@@ -26,29 +26,20 @@ def home():
 
 @app.post("/chat")
 async def chat(request: ChatRequest):
-    topic_instruction = TOPICS.get(request.topic, "General Conversation")
+    # Immersion Priority: Always reply in German if the user wants "Lili" style
+    # simple map for clarity
+    lang_map = {"de-DE": "German", "en-US": "English"}
+    target_lang_name = lang_map.get(request.target_lang, request.target_lang)
     
-    # Adjust prompt style based on topic
-    if request.topic == "Free Conversation":
-        system_instruction = f"""You are GenauTapi 🐶, a friendly German-English chat partner.
-Topic: {topic_instruction}
-User said (in {request.source_lang}): "{request.transcript}"
-Reply naturally in {request.target_lang}. Only correct grammar if strictly necessary. Score 0-100 based on flow and vocabulary."""
-    else:
-        system_instruction = f"""You are GenauTapi 🐶, patient German-English speech coach.
-Topic: {topic_instruction}
-User said (in {request.source_lang}): "{request.transcript}"
-Give short reply in {request.target_lang}, correct grammar, score 0-100."""
-    
-    # Use environment variable for API key if available
-    api_key = os.getenv("OPENAI_API_KEY")
-    client = openai.OpenAI(api_key=api_key) if api_key else None
-
-    if client:
-        try:
-            response = client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[{"role": "system", "content": system_instruction}]
+    system_instruction = f"""You are GenauTapi 🐶, a fluent German speaker.
+User said: "{request.transcript}"
+Task:
+1. Act as a friendly conversational partner.
+2. Reply ONLY in {target_lang_name} (German).
+3. Do not switch to English.
+4. Keep replies concise and natural.
+5. Do not correct grammar unless the user makes no sense.
+6. Score the user's proficiency (0-100)."""
             )
             reply = response.choices[0].message.content
         except Exception as e:
