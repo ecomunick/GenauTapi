@@ -79,7 +79,8 @@ struct TopicView: View {
     let topics = [
         ("Daily Life", "🏠"),
         ("Shopping", "🛒"),
-        ("Job Interview", "💼")
+        ("Job Interview", "💼"),
+        ("Free Conversation", "🗣️")
     ]
     
     var body: some View {

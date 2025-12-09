@@ -16,7 +16,8 @@ class ChatRequest(BaseModel):
 TOPICS = {
     "Daily Life": "Act as friendly neighbor chatting about weather, family, weekend plans",
     "Shopping": "Act as German supermarket cashier. Keep it simple, correct politely",
-    "Job Interview": "Act as HR manager conducting B1 German job interview. Professional but encouraging"
+    "Job Interview": "Act as HR manager conducting B1 German job interview. Professional but encouraging",
+    "Free Conversation": "Act as a friendly conversational partner. Chat naturally. Do not correct grammar unless it makes the sentence excessively hard to understand. Prioritize keeping the conversation flowing."
 }
 
 @app.get("/")
@@ -25,8 +26,17 @@ def home():
 
 @app.post("/chat")
 async def chat(request: ChatRequest):
-    prompt = f"""You are GenauTapi 🐶, patient German-English speech coach.
-Topic: {TOPICS.get(request.topic, "General Conversation")}
+    topic_instruction = TOPICS.get(request.topic, "General Conversation")
+    
+    # Adjust prompt style based on topic
+    if request.topic == "Free Conversation":
+        system_instruction = f"""You are GenauTapi 🐶, a friendly German-English chat partner.
+Topic: {topic_instruction}
+User said (in {request.source_lang}): "{request.transcript}"
+Reply naturally in {request.target_lang}. Only correct grammar if strictly necessary. Score 0-100 based on flow and vocabulary."""
+    else:
+        system_instruction = f"""You are GenauTapi 🐶, patient German-English speech coach.
+Topic: {topic_instruction}
 User said (in {request.source_lang}): "{request.transcript}"
 Give short reply in {request.target_lang}, correct grammar, score 0-100."""
     
@@ -38,7 +48,7 @@ Give short reply in {request.target_lang}, correct grammar, score 0-100."""
         try:
             response = client.chat.completions.create(
                 model="gpt-4o-mini",
-                messages=[{"role": "system", "content": prompt}]
+                messages=[{"role": "system", "content": system_instruction}]
             )
             reply = response.choices[0].message.content
         except Exception as e:

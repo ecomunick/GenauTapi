@@ -160,6 +160,13 @@ class GenauTapiModel: NSObject, ObservableObject, SFSpeechRecognizerDelegate, AV
     
     // MARK: - TTS
     func speak(text: String) {
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: .duckOthers)
+            try AVAudioSession.sharedInstance().setActive(true)
+        } catch {
+            print("Audio session error")
+        }
+        
         let utterance = AVSpeechUtterance(string: text)
         utterance.voice = AVSpeechSynthesisVoice(language: targetLang)
         speechSynthesizer.speak(utterance)
