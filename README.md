@@ -1,49 +1,46 @@
-# Speech Recognition by OfDan
+# GenauTapi 🐶 - AI Speech Coach
 
-## Overview
-"Speech Recognition by OfDan" is a SwiftUI-based application for iOS, designed to demonstrate the capabilities of speech recognition and text-to-speech synthesis in Swift. The app listens to spoken English and displays the transcribed text on the screen. Users have the option to copy the text and to have the app speak the transcribed text out loud.
+GenauTapi is an internal AI-powered language learning assistant focused on German-English speech practice. It uses OpenAI/Perplexity to act as a conversational partner, correcting your grammar and helping you speak like a local.
 
 ## Features
-- **Speech Recognition**: The app actively listens to spoken English and transcribes it after a short delay.
-- **Text Display**: Transcribed text is displayed on the screen for easy reading.
-- **Copy Functionality**: Users can copy the transcribed text for use in other applications.
-- **Speech Output**: There is an option to have the app read the transcribed text aloud, showcasing text-to-speech capabilities.
+- **Speech Recognition**: Local speech-to-text processing (German/English).
+- **AI Coach**: Interactive roleplay scenarios (Daily Life, Shopping, Job Interview).
+- **TTS**: Voice replies from the AI.
+- **Gamification**: XP tracking and daily streaks to keep you motivated.
+- **Backend API**: Python FastAPI backend for AI processing.
 
-## License
-This project is licensed under the MIT License, which permits unrestricted use, modification, and distribution. For more details, please refer to the [LICENSE](LICENSE) file included in this repository.
+## Setup
 
-**Note:** The robot image used in the app is sourced from Pixabay and is subject to their licensing terms. For more information, please visit [Pixabay License](https://pixabay.com/service/license-summary/).
+### Backend (Python)
+The backend requires Python 3.9+.
 
-## Getting Started
-To get started with "Speech Recognition by OfDan", clone this repository and open the project in Xcode. Ensure you have the latest version of Xcode and SwiftUI installed.
+1. Navigate to the `backend` folder.
+2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. Set your OpenAI API Key (optional for mock mode):
+   ```bash
+   export OPENAI_API_KEY="sk-..."
+   ```
+4. Run the server:
+   ```bash
+   uvicorn main:app --reload
+   ```
 
-## Requirements
-- iOS 17.0 or later
-- Xcode 15.0 or later
-- Swift 5.0 or later
+### Frontend (iOS)
+1. Open `GenauTapi.xcodeproj` in Xcode.
+2. Select your development team in the Signing & Capabilities tab.
+3. Build and run on a Simulator or Device.
+   - **Note**: Speech Recognition requires microphone permission which works best on a physical device.
 
-## Installation
-1. Clone the repository: `git clone git@github.com:hackzilla/SpeechRecognition.git`
-2. Open `SpeechRecognition.xcodeproj` in Xcode.
-3. Build and run the application on your device or simulator.
+## Deployment to Render.com
+1. Connect this repository to your Render.com account.
+2. Select "Web Service".
+3. Render will detect the `Procfile` in `backend/`.
+4. Add environment variable `OPENAI_API_KEY`.
+5. Update `GenauTapiModel.swift` in the iOS app with your new Render URL.
 
-## Speech Recognition
-
-The supported languages for on-device recognition are the same as the quicktype dictation.
-https://www.apple.com/ios/feature-availability/#quicktype-keyboard-on-device-dictation
-
-## Contributions
-Contributions to "Speech Recognition by OfDan" are welcome. Please fork the repository and submit a pull request with your changes.
-
-## Acknowledgments
-- Speech recognition and synthesis features are powered by Swift's robust frameworks.
-- Robot image courtesy of Pixabay.
-
-## About
-This project was created with the main purpose of understanding and demonstrating the capabilities of speech recognition and synthesis within the Swift programming language.
-
----
-
-For more information or support, please open an issue on GitHub or visit [OfDan's Contact Page](https://www.ofdan.com/contact/).
-
-If you find this project useful, consider [buying me a coffee](https://www.buymeacoffee.com/hackzilla).
+## Architecture
+- **Frontend**: SwiftUI, SFSpeechRecognizer, AVSpeechSynthesizer.
+- **Backend**: FastAPI, OpenAI API.
