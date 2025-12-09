@@ -52,7 +52,7 @@ struct WelcomeView: View {
             }
             .padding()
             
-            Button(action: { currentScreen = "topics" }) {
+            Button(action: { currentScreen = "chat" }) {
                 Text("Start Practice")
                     .font(.headline)
                     .foregroundColor(.white)
