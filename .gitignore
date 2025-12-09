@@ -1,0 +1,22 @@
+# Business Strategy (Confidential)
+Instructions.md
+Instructions_v2.md
+_*
+
+# IDE
+.DS_Store
+.vscode/
+.idea/
+
+# Xcode
+*.xcworkspace
+xcuserdata/
+*.xcuserstate
+
+# Build
+build/
+DerivedData/
+
+# Dependencies
+Pods/
+*.lock
