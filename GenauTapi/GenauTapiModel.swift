@@ -31,10 +31,7 @@ class GenauTapiModel: NSObject, ObservableObject, SFSpeechRecognizerDelegate, AV
     private var speechRecognizer: SFSpeechRecognizer?
     
     // Backend URL - Replace with actual Render URL after deployment
-    // For local testing in simulator, localhost might not work easily. 
-    // Ideally use: http://localhost:8000/chat if valid, or the render URL.
-    // I'll stick to a placeholder or assume localhost for simulator functionality if bridged.
-    private let backendURL = "http://localhost:8000/chat" 
+    private let backendURL = "https://genautapi.onrender.com/chat" 
 
     override init() {
         super.init()
