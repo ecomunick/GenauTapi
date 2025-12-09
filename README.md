@@ -10,7 +10,7 @@ GenauTapi is a personal AI-powered speech coach that helps you practice speaking
 - **3 Practice Modes**: Daily Life 🏠, Shopping 🛒, Job Interview 💼.
 
 ## 🚀 Status
-- **Backend**: Deployed on Render.com (`https://genautapi.onrender.com/chat`)
+- **Backend**: Deployed on Render.com (`https://genautapi.onrender.com/`)
 - **iOS App**: MVP Ready on Device.
 
 ---
