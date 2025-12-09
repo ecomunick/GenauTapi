@@ -12,6 +12,7 @@ class GenauTapiModel: NSObject, ObservableObject, SFSpeechRecognizerDelegate, AV
     @Published var isRecording: Bool = false
     @Published var isProcessing: Bool = false
     @Published var showCorrection: Bool = false
+    @Published var score: Int = 0
     
     // User Settings
     @Published var selectedTopic: String = "Free Conversation"
@@ -149,6 +150,7 @@ class GenauTapiModel: NSObject, ObservableObject, SFSpeechRecognizerDelegate, AV
                 if let data = data, let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
                     self.reply = json["reply"] as? String ?? "Error"
                     self.correction = json["correction"] as? String ?? ""
+                    self.score = json["score"] as? Int ?? 0
                     let newXp = json["xp"] as? Int ?? 0
                     self.updateXP(amount: newXp)
                     self.speak(text: self.reply)
@@ -168,7 +170,9 @@ class GenauTapiModel: NSObject, ObservableObject, SFSpeechRecognizerDelegate, AV
         }
         
         let utterance = AVSpeechUtterance(string: text)
-        utterance.voice = AVSpeechSynthesisVoice(language: targetLang)
+        // Force German voice regardless of targetLang setting
+        utterance.voice = AVSpeechSynthesisVoice(language: "de-DE")
+        utterance.rate = 0.5 // Slightly slower for learning
         speechSynthesizer.speak(utterance)
     }
     

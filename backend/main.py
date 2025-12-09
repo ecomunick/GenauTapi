@@ -26,16 +26,17 @@ def home():
 
 @app.post("/chat")
 async def chat(request: ChatRequest):
-    # Immersion Priority: Always reply in German if the user wants "Lili" style
+    # Immersion Priority: Always reply in German
     system_instruction = f"""You are GenauTapi 🐶, a fluent German speaker.
 User said: "{request.transcript}"
 Task:
 1. Act as a friendly conversational partner.
 2. Reply ONLY in German.
 3. Do not switch to English.
-4. Keep replies concise and natural.
+4. Keep replies concise and natural (1-2 sentences max).
 5. Do not correct grammar unless the user makes no sense.
-6. Score the user's proficiency (0-100)."""
+6. At the END of your response, add a score on a new line in this exact format: [SCORE: XX]
+   where XX is 0-100 based on grammar, vocabulary, and fluency."""
 
     # Use environment variable for API key if available
     api_key = os.getenv("OPENAI_API_KEY")
@@ -50,7 +51,18 @@ Task:
                 model="gpt-4o-mini",
                 messages=[{"role": "system", "content": system_instruction}]
             )
-            reply = response.choices[0].message.content
+            full_reply = response.choices[0].message.content
+            
+            # Parse score from response
+            import re
+            score_match = re.search(r'\[SCORE:\s*(\d+)\]', full_reply)
+            if score_match:
+                score = int(score_match.group(1))
+                # Remove score from reply
+                reply = re.sub(r'\s*\[SCORE:\s*\d+\]', '', full_reply).strip()
+            else:
+                reply = full_reply
+                score = 75  # Default if parsing fails
         except Exception as e:
              reply = f"Error calling AI: {str(e)}"
 

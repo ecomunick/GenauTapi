@@ -39,18 +39,12 @@ struct WelcomeView: View {
             
             Spacer()
             
-            VStack {
-                Text("Select Translation Mode:")
-                Picker("Language", selection: $model.sourceLang) {
-                    Text("🇩🇪 Deutsch → 🇺🇸 English").tag("de-DE")
-                    Text("🇺🇸 English → 🇩🇪 Deutsch").tag("en-US")
-                }
-                .pickerStyle(.segmented)
-                .onChange(of: model.sourceLang) { _ in
-                    model.toggleLanguage()
-                }
-            }
-            .padding()
+            
+            Text("🇩🇪 Speak German, Learn German!")
+                .font(.title2)
+                .foregroundColor(.blue)
+                .padding()
+            
             
             Button(action: { currentScreen = "chat" }) {
                 Text("Start Practice")
@@ -80,8 +74,11 @@ struct ChatView: View {
         VStack {
             // Header
             HStack {
-                // Spacer to balance
-                Spacer() 
+                Button(action: { currentScreen = "welcome" }) {
+                    Image(systemName: "arrow.left")
+                        .font(.title2)
+                }
+                Spacer()
                 Text("GenauTapi Chat 🇩🇪")
                     .font(.headline)
                 Spacer()
@@ -123,13 +120,8 @@ struct ChatView: View {
                             .background(Color.green.opacity(0.1))
                             .cornerRadius(10)
                         
-                        if model.showCorrection {
-                             Text(model.correction)
-                                .font(.footnote)
-                                .foregroundColor(.red)
-                                .padding(.top, 5)
-                            
-                             Text("Woof! 🐕 Score: 85/100 🎉") // Mock score as per instructions
+                        if model.showCorrection && model.score > 0 {
+                             Text("Score: \(model.score)/100 🎉")
                                 .font(.caption)
                                 .bold()
                                 .padding(.top, 5)
