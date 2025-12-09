@@ -19,6 +19,10 @@ TOPICS = {
     "Job Interview": "Act as HR manager conducting B1 German job interview. Professional but encouraging"
 }
 
+@app.get("/")
+def home():
+    return {"message": "GenauTapi Backend is LIVE! 🐶", "status": "Ready to chat"}
+
 @app.post("/chat")
 async def chat(request: ChatRequest):
     prompt = f"""You are GenauTapi 🐶, patient German-English speech coach.
