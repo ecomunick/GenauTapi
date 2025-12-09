@@ -1,46 +1,68 @@
 # GenauTapi 🐶 - AI Speech Coach
 
-GenauTapi is an internal AI-powered language learning assistant focused on German-English speech practice. It uses OpenAI/Perplexity to act as a conversational partner, correcting your grammar and helping you speak like a local.
+GenauTapi is a personal AI-powered speech coach that helps you practice speaking German. It uses your iPhone's speech recognition to listen to you and a Python AI backend to correct your grammar and reply to you.
 
-## Features
-- **Speech Recognition**: Local speech-to-text processing (German/English).
-- **AI Coach**: Interactive roleplay scenarios (Daily Life, Shopping, Job Interview).
-- **TTS**: Voice replies from the AI.
-- **Gamification**: XP tracking and daily streaks to keep you motivated.
-- **Backend API**: Python FastAPI backend for AI processing.
+## 🌟 Features
+- **Real-time Speech Recognition**: Specific to German/English.
+- **AI Feedback**: Corrects grammar and rates your sentences.
+- **Voice Replies**: The dog (Tapi) speaks back to you!
+- **Gamification**: XP tracking and daily streaks.
+- **3 Practice Modes**: Daily Life 🏠, Shopping 🛒, Job Interview 💼.
 
-## Setup
+## 🚀 Status
+- **Backend**: Deployed on Render.com (`https://genautapi.onrender.com/chat`)
+- **iOS App**: MVP Ready on Device.
 
-### Backend (Python)
-The backend requires Python 3.9+.
+---
 
-1. Navigate to the `backend` folder.
-2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. Set your OpenAI API Key (optional for mock mode):
-   ```bash
-   export OPENAI_API_KEY="sk-..."
-   ```
-4. Run the server:
-   ```bash
-   uvicorn main:app --reload
-   ```
+## 🛠 Usage Guide
 
-### Frontend (iOS)
-1. Open `GenauTapi.xcodeproj` in Xcode.
-2. Select your development team in the Signing & Capabilities tab.
-3. Build and run on a Simulator or Device.
-   - **Note**: Speech Recognition requires microphone permission which works best on a physical device.
+### Can I disconnect the cable? 🔌
+**YES!** 
+Once you press "Run" in Xcode and the app opens on your phone:
+1. You can stop the app in Xcode (Click Stop ⏹).
+2. You can **unplug the cable**.
+3. You can verify the app works by tapping the **GenauTapi** icon on your home screen.
+4. **Note**: On a free Apple Developer account, the app will work for **7 days**. After that, you just need to plug it in and press "Run" in Xcode again to renew it.
 
-## Deployment to Render.com
-1. Connect this repository to your Render.com account.
-2. Select "Web Service".
-3. Render will detect the `Procfile` in `backend/`.
-4. Add environment variable `OPENAI_API_KEY`.
-5. Update `GenauTapiModel.swift` in the iOS app with your new Render URL.
+---
 
-## Architecture
-- **Frontend**: SwiftUI, SFSpeechRecognizer, AVSpeechSynthesizer.
-- **Backend**: FastAPI, OpenAI API.
+## 💻 Backend Setup (Python)
+The backend handles the AI logic (OpenAI) and scoring.
+
+### Deployment (Render)
+The backend is already configured for [Render.com](https://render.com).
+1. **Service**: Web Service (Python 3).
+2. **Build Command**: `pip install -r backend/requirements.txt`
+3. **Start Command**: `cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT`
+4. **Environment Variables**:
+   - `OPENAI_API_KEY`: Your key from `platform.openai.com`.
+
+### Local Development
+```bash
+cd backend
+pip install -r requirements.txt
+uvicorn main:app --reload
+```
+
+---
+
+## 📱 iOS Setup (Xcode)
+1. **Open Project**: Double-click `GenauTapi` in this folder.
+2. **Team / Signing**:
+   - Go to project settings > **Signing & Capabilities**.
+   - Select your **Personal Team**.
+   - If "Status: No Account", re-select the team or sign in via Xcode > Settings > Accounts.
+3. **Developer Mode** (Important):
+   - Only for iOS 16+: Go to Settings > Privacy & Security > Developer Mode > **ON**.
+   - Restart phone & click "Turn On".
+4. **Run**:
+   - Select your iPhone in the top bar.
+   - Press **Play ▶️**.
+
+---
+
+## 📁 Project Structure
+- `GenauTapi/` - iOS Source Code (SwiftUI).
+- `backend/` - Python API (FastAPI).
+- `README.md` - This guide.
