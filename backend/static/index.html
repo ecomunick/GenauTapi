@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Genau Tapi! 🐶</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent: #8b5cf6;
+            /* Violet */
+            --accent-hover: #7c3aed;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            padding: 1rem;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+
+        @media(min-width: 768px) {
+            .container {
+                grid-template-columns: 3fr 2fr;
+            }
+        }
+
+        /* Card Style */
+        .card {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            margin: 0 0 0.5rem 0;
+            background: linear-gradient(to right, #8b5cf6, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        h2 {
+            margin: 0 0 1rem 0;
+            font-size: 1.25rem;
+        }
+
+        /* Chat UI */
+        .mic-btn {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--card-bg);
+            border: 2px solid var(--accent);
+            color: var(--accent);
+            font-size: 2rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 1rem auto;
+        }
+
+        .mic-btn:hover {
+            background: var(--accent);
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .mic-btn.listening {
+            background: #ef4444;
+            border-color: #ef4444;
+            color: white;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 15px transparent;
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 transparent;
+            }
+        }
+
+        .chat-result {
+            margin-top: 1rem;
+            border-top: 1px solid #334155;
+            padding-top: 1rem;
+        }
+
+        .reply-box {
+            font-size: 1.1rem;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+        }
+
+        .correction-box {
+            color: #fbbf24;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            background: rgba(251, 191, 36, 0.1);
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+        }
+
+        .score-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .score-pill {
+            background: var(--accent);
+            padding: 0.25rem 0.75rem;
+            border-radius: 99px;
+            font-weight: bold;
+        }
+
+        /* Leaderboard UI */
+        .leaderboard-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .lb-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #334155;
+            font-size: 0.9rem;
+        }
+
+        .lb-item:last-child {
+            border-bottom: none;
+        }
+
+        .lb-rank {
+            width: 30px;
+            color: var(--text-secondary);
+        }
+
+        .lb-flag {
+            margin-right: 0.5rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header style="text-align: center; margin: 2rem 0;">
+        <img src="/logo.png" alt="GenauTapi Logo"
+            style="max-width: 150px; border-radius: 1rem; margin-bottom: 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
+        <h1>Genau Tapi!</h1>
+        <p style="color: #94a3b8;">Speak & improve your German language skills with Tapi 🐶</p>
+    </header>
+
+    <div class="container">
+        <!-- Main Chat Area -->
+        <main class="card">
+            <h2>🎙️ Conversation Coach</h2>
+            <div id="status" style="text-align: center; color: #94a3b8; height: 1.5rem;">Tap mic to start</div>
+
+            <button id="micBtn" class="mic-btn" onclick="toggleMic()">🎤</button>
+
+            <!-- Text Fallback -->
+            <div style="text-align:center; margin-bottom:1rem;">
+                <input type="text" id="manualInput" placeholder="Or type German here..."
+                    style="padding:0.5rem; border-radius:0.5rem; border:1px solid #334155; width:60%; background:#0f172a; color:white;">
+                <button onclick="sendManual()"
+                    style="padding:0.5rem 1rem; border-radius:0.5rem; border:none; background:#3b82f6; color:white; cursor:pointer;">Send</button>
+            </div>
+
+            <div id="resultArea" style="display:none;" class="chat-result">
+                <div style="font-size:0.8rem; color:#94a3b8;">TAPi SAYS:</div>
+                <div id="replyText" class="reply-box"></div>
+
+                <div id="correctionArea" style="display:none;">
+                    <div style="font-size:0.8rem; color:#fbbf24;">CORRECTION:</div>
+                    <div id="correctionText" class="correction-box"></div>
+                </div>
+
+                <div class="score-row" style="display:flex; justify-content: space-around; font-size: 0.9rem;">
+                    <div style="text-align:center;">
+                        <span style="display:block; font-size:1.2rem; font-weight:bold; color:#10b981;"
+                            id="scoreText">0</span>
+                        <span style="color:#94a3b8; font-size:0.75rem;">SCORE</span>
+                    </div>
+                    <div style="text-align:center;">
+                        <span style="display:block; font-size:1.2rem; font-weight:bold; color:#3b82f6;"
+                            id="gramText">0</span>
+                        <span style="color:#94a3b8; font-size:0.75rem;">GRAMMAR</span>
+                    </div>
+                    <div style="text-align:center;">
+                        <span style="display:block; font-size:1.2rem; font-weight:bold; color:#a855f7;"
+                            id="styleText">0</span>
+                        <span style="color:#94a3b8; font-size:0.75rem;">STYLE</span>
+                    </div>
+                </div>
+                <div style="text-align:center; font-size:0.8rem; color:#fbbf24; margin-top:0.5rem;" id="tipText"></div>
+            </div>
+        </main>
+
+        <!-- Leaderboard Sidebar -->
+        <aside class="card">
+            <h2>🏆 Global Leaderboard</h2>
+            <ul id="lbList" class="leaderboard-list">
+                <li style="text-align:center; color:#94a3b8;">Loading...</li>
+            </ul>
+            <div style="margin-top:1rem; text-align:center; font-size:0.8rem; color:#64748b;">
+                Ranked by Grammar & Pronunciation
+            </div>
+        </aside>
+    </div>
+
+    <script>
+        // --- Web Speech API ---
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition;
+        let isListening = false;
+        const micBtn = document.getElementById('micBtn');
+        const statusEl = document.getElementById('status');
+
+        let gotResult = false;
+
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.lang = 'de-DE';
+            recognition.interimResults = false;
+            recognition.continuous = false;
+
+            recognition.onstart = () => {
+                isListening = true;
+                gotResult = false;
+                micBtn.classList.add('listening');
+                statusEl.innerText = "Listening... (Speak German)";
+                statusEl.style.color = "#10b981";
+            };
+            recognition.onend = () => {
+                isListening = false;
+                micBtn.classList.remove('listening');
+                if (gotResult) {
+                    statusEl.innerText = "Processing...";
+                    statusEl.style.color = "#94a3b8";
+                } else {
+                    statusEl.innerText = "Tap mic to start (No speech detected)";
+                    statusEl.style.color = "#fbbf24";
+                }
+            };
+            recognition.onresult = (e) => {
+                gotResult = true;
+                const transcript = e.results[0][0].transcript;
+                sendChat(transcript);
+            };
+            recognition.onerror = (e) => {
+                console.error(e);
+                if (e.error === 'no-speech') {
+                    // handled by onend
+                } else {
+                    statusEl.innerText = "Error: " + e.error;
+                    statusEl.style.color = "#ef4444";
+                }
+            };
+        } else {
+            statusEl.innerText = "Browser not supported (Use Chrome/Safari)";
+            micBtn.disabled = true;
+        }
+
+        function toggleMic() {
+            if (!recognition) return;
+            if (isListening) recognition.stop();
+            else recognition.start();
+        }
+
+        function sendManual() {
+            const txt = document.getElementById('manualInput').value;
+            if (txt.trim()) sendChat(txt);
+        }
+
+        // --- Backend API ---
+        async function sendChat(text) {
+            try {
+                const res = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ transcript: text })
+                });
+                const data = await res.json();
+
+                // Display Result
+                document.getElementById('resultArea').style.display = 'block';
+                document.getElementById('replyText').innerText = data.reply;
+
+                if (data.correction && data.correction.length > 0) {
+                    document.getElementById('correctionArea').style.display = 'block';
+                    document.getElementById('correctionText').innerText = data.correction;
+                } else {
+                    document.getElementById('correctionArea').style.display = 'none';
+                }
+
+                // Calculate Score Locally (Average)
+                const gScore = data.grammar_score || 0;
+                const pScore = data.pronunciation_score || 0;
+                const totalScore = Math.floor((gScore + pScore) / 2);
+
+                document.getElementById('scoreText').innerText = totalScore;
+                document.getElementById('gramText').innerText = gScore;
+                document.getElementById('styleText').innerText = pScore;
+
+                document.getElementById('tipText').innerText = data.pronunciation_tip || "";
+
+                // Play OpenAI TTS audio if available
+                if (data.audio_url) {
+                    const audio = new Audio(data.audio_url);
+                    audio.play().catch(e => console.error("Audio playback failed:", e));
+                } else {
+                    // Fallback to browser TTS
+                    const u = new SpeechSynthesisUtterance(data.reply);
+                    u.lang = 'de-DE';
+                    window.speechSynthesis.speak(u);
+                }
+
+                // Refresh Leaderboard
+                fetchLeaderboard();
+
+            } catch (e) {
+                statusEl.innerText = "Network Error";
+                statusEl.style.color = "#ef4444";
+            }
+        }
+
+        async function fetchLeaderboard() {
+            try {
+                const res = await fetch('/leaderboard');
+                const data = await res.json();
+                const list = document.getElementById('lbList');
+                list.innerHTML = "";
+
+                data.forEach((user, idx) => {
+                    const li = document.createElement('li');
+                    li.className = 'lb-item';
+                    // Flag emoji helper (simple mapping or just text)
+                    // Assuming backend sends 2-char code like 'US', 'DE'
+                    const flag = getFlagEmoji(user.flag);
+
+                    li.innerHTML = `
+                    <div style="display:flex; align-items:center;">
+                        <span class="lb-rank">#${idx + 1}</span>
+                        <span class="lb-flag">${flag}</span>
+                        <span>${user.city || user.ip}</span>
+                    </div>
+                    <strong>${user.score}</strong>
+                `;
+                    list.appendChild(li);
+                });
+            } catch (e) { console.error("LB Error", e); }
+        }
+
+        function getFlagEmoji(countryCode) {
+            if (!countryCode || countryCode === 'UN') return '🏳️';
+            if (countryCode === 'LO') return '💻';
+            return countryCode.toUpperCase().replace(/./g, char => String.fromCodePoint(char.charCodeAt(0) + 127397));
+        }
+
+        // Initial Load
+        fetchLeaderboard();
+
+    </script>
+</body>
+
+</html>
