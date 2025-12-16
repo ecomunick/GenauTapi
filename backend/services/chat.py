@@ -6,9 +6,14 @@ import time
 from pydantic import BaseModel
 from dotenv import load_dotenv
 
-load_dotenv()
+# Robust .env loading
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir) # Should be backend/
+env_path = os.path.join(parent_dir, ".env")
+load_dotenv(env_path)
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+print(f"DEBUG: Loaded API Key? {'YES' if OPENAI_API_KEY else 'NO'}")
 
 class ChatResponse(BaseModel):
     reply: str
