@@ -1,88 +1,66 @@
-# GenauTapi 🐶 - AI German Speech Coach
+# Genau Tapi! 🐶🇩🇪
+> *Your Chill German Conversational Companion*
 
-GenauTapi is a German immersion speech coach app. Speak German, hear German replies, and improve your fluency through natural conversation with AI.
+**Genau Tapi!** is an AI-powered language coach designed to help you speak German naturally. Unlike strict grammar teachers, Tapi acts like a "chill friend"—prioritizing conversation flow and only correcting you when it really matters.
 
-## 🌟 Features (v1.0)
-- **German Immersion**: AI always replies in German (like Duolingo's Lili)
-- **Real-time Speech Recognition**: German speech-to-text
-- **Natural TTS**: German voice (de-DE) at learning-friendly speed
-- **Dynamic AI Scoring**: Real feedback on grammar, vocabulary, and fluency
-- **Gamification**: XP tracking and daily streaks
-- **Free Conversation**: No topics, just speak naturally
-
-## 🚀 Status
-- **Backend**: Deployed on Render.com (`https://genautapi.onrender.com/`)
-- **iOS App**: v1.0 Ready on Device
+The core experience is built for **iOS**, providing a native, fluid voice interface. A web version is available for demonstration.
 
 ---
 
-## 🛠 Usage Guide
+## 🌟 Key Features
 
-### Can I disconnect the cable? 🔌
-**YES!** 
-Once you press "Run" in Xcode and the app opens on your phone:
-1. You can stop the app in Xcode (Click Stop ⏹)
-2. You can **unplug the cable**
-3. The app is installed! Tap **GenauTapi** icon on your home screen
-4. **Note**: Free Apple Developer accounts last **7 days**. After that, just plug in and press "Run" again to renew
+### 🧠 **Distributed "Long-Term" Memory**
+- **Context Awareness**: Tapi remembers your name, hobbies, and past topics even if you restart the app or the server wipes.
+- **Client-Side Persistence**: To save tokens and ensure privacy, the "Memory Context" is stored on your device (iOS UserDefaults) and synced with the AI during conversation.
 
----
+### 🗣️ **Natural Voice Interaction**
+- **"Chill Friend" Persona**: The AI ignores minor mistakes (Grammar Score > 60) to keep the conversation flowing. It only interrupts with corrections if you make significant errors.
+- **High-Quality TTS**: Uses OpenAI's `nova` voice for a warm, natural German accent.
+- **Robust Audio Streaming**: Audio is streamed as Base64 data, ensuring instant playback without relying on temporary server files (Cloud-Native design).
 
-## 💻 Backend Setup (Python)
-The backend handles AI conversation and scoring using OpenAI.
-
-### Deployment (Render)
-Already configured for [Render.com](https://render.com):
-1. **Service**: Web Service (Python 3)
-2. **Build Command**: `pip install -r backend/requirements.txt`
-3. **Start Command**: `cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT`
-4. **Environment Variables**:
-   - `OPENAI_API_KEY`: Your key from `platform.openai.com`
-
-### Local Development
-```bash
-cd backend
-pip install -r requirements.txt
-uvicorn main:app --reload
-```
+### 📊 **Smart Scoring & Analytics**
+- **Real-time Feedback**: Get instant scores on **Grammar** and **Style** (Naturalness).
+- **Streak Tracking**: Keeps you motivated with a daily streak counter.
+- **Leaderboard**: Compete globally with other users (tracked via IP and persistent streak sync).
 
 ---
 
-## 📱 iOS Setup (Xcode)
-See [xcode_guide.md](.gemini/antigravity/brain/d8f08c30-bd12-4227-a233-eea5dd4c1352/xcode_guide.md) for detailed instructions.
+## 📱 iOS App (Main Experience)
+The **Genau Tapi iOS App** is the primary way to use the platform.
+- **Native SwiftUI Interface**: Smooth animations and haptic feedback.
+- **Continuous Speech Recognition**: Just speak naturally; the app listens.
+- **Smart Audio Session**: Seamlessly handles recording and playback without cutting off background audio ungracefully.
 
-**Quick Start:**
-1. **Open Project**: Double-click `GenauTapi.xcodeproj`
-2. **Team / Signing**: Select your Personal Team in Signing & Capabilities
-3. **Developer Mode** (iOS 16+): Settings > Privacy & Security > Developer Mode > ON
-4. **Run**: Select your iPhone in top bar, press Play ▶️
-
----
-
-## 📁 Project Structure
-- `GenauTapi/` - iOS Source Code (SwiftUI)
-- `backend/` - Python API (FastAPI)
-- `Instructions.md` - Build instructions for agents
-- `README.md` - This guide
+*(Code located in `GenauTapi/` folder)*
 
 ---
 
-## 🎯 How It Works
-1. **Speak** in German using the microphone button
-2. **AI listens** and generates a natural German response
-3. **Tapi speaks back** in German (de-DE voice)
-4. **Get scored** on grammar, vocabulary, and fluency (0-100)
-5. **Earn XP** and maintain your daily streak! 🔥
+## 🌐 Web Demo
+A web-based "Walkie-Talkie" version is available for testing and demonstration.
+- **URL**: [https://genautapi.onrender.com/](https://genautapi.onrender.com/)
+- **Toggle-to-Talk**: Tap the mic to start listening, speak freely (even with pauses), and tap again to send. Perfect for thoughtful practice.
 
 ---
 
-## 🐶 About Tapi
-GenauTapi (pronounced "geh-NOW-tah-pee") means "Exactly Tapi" in German. Tapi is your friendly AI dog coach who helps you practice German through natural conversation, just like Duolingo's Lili!
+## 🛠️ Technical Stack
+
+- **Backend**: Python (FastAPI)
+  - `openai` (GPT-4o-mini + TTS-1)
+  - `pydantic` for data validation
+  - Stateless architecture with client-injected state
+- **Frontend (iOS)**: Swift (SwiftUI)
+  - `AVFoundation` for audio
+  - `Speech` framework for recognition
+- **Frontend (Web)**: HTML/JS (Vanilla)
+  - Web Speech API
+- **Deployment**: Render (Docker/Python)
+
+## 🚀 Deployment
+
+The backend is deployed on **Render** free tier.
+- **Base URL**: `https://genautapi.onrender.com`
+- **Environment Inputs**: `OPENAI_API_KEY`
 
 ---
 
-## 📝 Version History
-- **v1.0** (Dec 2024): German immersion mode, dynamic scoring, simplified UI
-- **v0.3**: Conversational mode added
-- **v0.2**: Backend deployed to Render
-- **v0.1**: Initial MVP with topic selection
+*Made with 🥨 and 🍺 by ecomunick*
