@@ -1,6 +1,7 @@
 # Business Strategy (Confidential)
 Instructions.md
 Instructions_v2.md
+Instructions_v2b.md
 _*
 
 # IDE
@@ -20,3 +21,5 @@ DerivedData/
 # Dependencies
 Pods/
 *.lock
+
+.env
