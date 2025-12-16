@@ -22,12 +22,13 @@ app.add_middleware(
 class ChatRequest(BaseModel):
     transcript: str
     streak: int = 1
+    memory: str = ""  # The AI's summary of previous conversations
 
 @app.post("/chat")
 async def chat_endpoint(req: ChatRequest, request: Request):
     user_ip = request.client.host
     # 1. AI Logic
-    response = call_ai_coach(req.transcript, user_ip)
+    response = call_ai_coach(req.transcript, user_ip, req.memory)
     
     # 2. Update Leaderboard (Sync persistent steak)
     if len(req.transcript) > 2:

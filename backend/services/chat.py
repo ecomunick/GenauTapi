@@ -18,48 +18,45 @@ class ChatResponse(BaseModel):
     score: int
     grammar_score: int
     pronunciation_score: int
-    audio_url: str = ""  # For TTS audio
+    audio_url: str = ""
+    memory: str = ""  # AI updates this
 
-def call_ai_coach(transcript: str, user_ip: str) -> ChatResponse:
+def call_ai_coach(transcript: str, user_ip: str, memory_context: str = "") -> ChatResponse:
     if not OPENAI_API_KEY:
-        # Fallback simulation
         return ChatResponse(
-            reply="Simulation: (OPENAI_API_KEY Missing) Hallo! Wie geht es dir?",
-            score=50,
-            grammar_score=50,
-            pronunciation_score=50
+            reply="Simulation: (OPENAI_API_KEY Missing)", score=50, grammar_score=50, pronunciation_score=50, memory=memory_context
         )
 
     system_prompt = f"""
-You are "Genau Tapi!", a friendly German accent & grammar coach.
+You are "Genau Tapi!", a friendly German language friend.
 
-Your tasks:
-1. Carry a fluid conversation in German.
-2. Analyze the user's German input: "{transcript}"
-3. Detect grammar mistakes but DO NOT obsess over them.
-4. Score the user (0-100) based on Grammar + Style.
-5. **Conversational Rule: "Chill Friend Mode"**
-   - **Prioritize FLOW**: Respond to the *meaning*, not the grammar.
-   - **Correction Policy**: 
-     - If Grammar Score >= 60: **DO NOT mentioned the mistake in your spoken reply.** Just reply naturally. (You can still set the 'correction' field for the UI, but don't speak it).
-     - If Grammar Score < 60: Gently mention the correct form, but keep it brief (e.g. "Du meinst X? Ja...").
-   - Never sound like a teacher. Be casual.
+**MEMORY (Context of previous chats)**:
+"{memory_context}"
 
-Return this exact JSON format:
+**Tasks**:
+1. Analyize input: "{transcript}"
+2. Update the MEMORY: specific topics, user's name, or what we discussed. Keep it concise (max 2 sentences).
+   - If user changes topic, update memory to reflect that.
+   - Example Memory: "User is Tapi. We talked about pizza yesterday."
+3. Reply naturally based on MEMORY + Input.
+
+**Chill Friend Mode**:
+- Prioritize FLOW. Only correct if mistakes are HUGE (Grammar Score < 60).
+- Be casual.
+
+Return JSON:
 {{
-  "reply": "Your natural spoken reply. DO NOT include corrections unless score is very low.",
-  "correction": "Written correction for the UI (always include if there is a mistake, for user reference)",
-  "should_repeat": false, 
-  "pronunciation_tip": "Short tip on style or grammar if needed",
-  "grammar_score": number from 0-100,
-  "pronunciation_score": number from 0-100 (Style/Naturalness)
+  "reply": "Spoken reply based on memory and input",
+  "correction": "Written correction if needed",
+  "memory": "UPDATED concise summary string (CRITICAL: Do not lose important past info)",
+  "grammar_score": 0-100,
+  "pronunciation_score": 0-100
 }}
     """
     
     try:
         client = openai.OpenAI(api_key=OPENAI_API_KEY)
         
-        # Get text response
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[{"role": "system", "content": system_prompt}],

@@ -226,27 +226,40 @@ struct ContentView: View {
         synthesizer.speak(utterance)
     }
     
+    @State private var memory: String = ""
+
     func performAnalysis() {
         guard !speechRecognizer.transcript.isEmpty else { return }
         isProcessing = true
-        lastTranscript = speechRecognizer.transcript
+        let lastTranscript = speechRecognizer.transcript
+        speechRecognizer.stopTranscribing() // Stop transcribing after getting the transcript
+        
+        // Load memory if empty
+        if memory.isEmpty {
+            memory = UserDefaults.standard.string(forKey: "aiMemory") ?? ""
+        }
         
         // Call Backend API
         // USING LAN IP for Device Support: 192.168.68.106
-        guard let url = URL(string: "http://192.168.68.106:8000/chat") else { return }
+        guard let url = URL(string: "https://genautapi.onrender.com/chat") else { return }
         
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
-        let body: [String: Any] = ["transcript": lastTranscript, "streak": streak]
+        // Send memory context
+        let body: [String: Any] = [
+            "transcript": lastTranscript,
+            "streak": streak,
+            "memory": memory
+        ]
         request.httpBody = try? JSONSerialization.data(withJSONObject: body)
         
         print("Sending request to \(url.absoluteString) with body: \(body)")
 
         URLSession.shared.dataTask(with: request) { data, response, error in
             DispatchQueue.main.async {
-                isProcessing = false
+                self.isProcessing = false
                 
                 if let error = error {
                     print("Network Error: \(error.localizedDescription)")
@@ -260,24 +273,33 @@ struct ContentView: View {
                     }
                     
                     if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
-                        self.replyText = (json["reply"] as? String) ?? "Error"
-                        self.correctionText = (json["correction"] as? String) ?? ""
-                        self.pronunciationTip = (json["pronunciation_tip"] as? String) ?? ""
-                        
-                        let gScore = (json["grammar_score"] as? Int) ?? 0
-                        let pScore = (json["pronunciation_score"] as? Int) ?? 0
-                        self.grammarScore = gScore
-                        self.pronunciationScore = pScore
-                        
-                        // Calculate Total Score locally for consistency
-                        self.score = (gScore + pScore) / 2
-                        
-                        // Play OpenAI TTS audio if available
-                        if let audioURL = json["audio_url"] as? String, !audioURL.isEmpty {
-                            playAudioFromURL(audioURL)
-                        } else {
-                            // Fallback to iOS TTS if no audio
-                            speakWithIOSTTS(self.replyText)
+                        withAnimation {
+                            self.replyText = (json["reply"] as? String) ?? "Error"
+                            self.correctionText = (json["correction"] as? String) ?? ""
+                            self.pronunciationTip = (json["pronunciation_tip"] as? String) ?? ""
+                            
+                            let gScore = (json["grammar_score"] as? Int) ?? 0
+                            let pScore = (json["pronunciation_score"] as? Int) ?? 0
+                            self.grammarScore = gScore
+                            self.pronunciationScore = pScore
+                            
+                            // Calculate Total Score locally for consistency
+                            self.score = (gScore + pScore) / 2
+                            
+                            // Update Memory & Persist
+                            if let newMemory = json["memory"] as? String {
+                                self.memory = newMemory
+                                UserDefaults.standard.set(newMemory, forKey: "aiMemory")
+                                print("🧠 Memory Updated: \(newMemory)")
+                            }
+                            
+                            // Play OpenAI TTS audio if available
+                            if let audioURL = json["audio_url"] as? String, !audioURL.isEmpty {
+                                self.playAudioFromURL(audioURL)
+                            } else {
+                                // Fallback to iOS TTS if no audio
+                                self.speakWithIOSTTS(self.replyText)
+                            }
                         }
                     } else {
                         print("JSON Parsing Failed")
