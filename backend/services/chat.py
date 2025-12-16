@@ -14,6 +14,7 @@ load_dotenv(env_path)
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 print(f"DEBUG: Loaded API Key? {'YES' if OPENAI_API_KEY else 'NO'}")
+print(f"DEBUG: ALL KEYS: {list(os.environ.keys())}")  # Check if it's there under a diff name
 
 class ChatResponse(BaseModel):
     reply: str
