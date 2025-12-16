@@ -173,8 +173,10 @@
 <body>
 
     <header style="text-align: center; margin: 2rem 0;">
+        <img src="/logo.png" alt="GenauTapi Logo"
+            style="max-width: 150px; border-radius: 1rem; margin-bottom: 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
         <h1>Genau Tapi!</h1>
-        <p style="color: #94a3b8;">Speak German & Compete Globally 🌍</p>
+        <p style="color: #94a3b8;">Speak & improve your German language skills with Tapi 🐶</p>
     </header>
 
     <div class="container">
@@ -185,6 +187,14 @@
 
             <button id="micBtn" class="mic-btn" onclick="toggleMic()">🎤</button>
 
+            <!-- Text Fallback -->
+            <div style="text-align:center; margin-bottom:1rem;">
+                <input type="text" id="manualInput" placeholder="Or type German here..."
+                    style="padding:0.5rem; border-radius:0.5rem; border:1px solid #334155; width:60%; background:#0f172a; color:white;">
+                <button onclick="sendManual()"
+                    style="padding:0.5rem 1rem; border-radius:0.5rem; border:none; background:#3b82f6; color:white; cursor:pointer;">Send</button>
+            </div>
+
             <div id="resultArea" style="display:none;" class="chat-result">
                 <div style="font-size:0.8rem; color:#94a3b8;">TAPi SAYS:</div>
                 <div id="replyText" class="reply-box"></div>
@@ -194,10 +204,24 @@
                     <div id="correctionText" class="correction-box"></div>
                 </div>
 
-                <div class="score-row">
-                    <div>Score: <span id="scoreText" class="score-pill">0</span></div>
-                    <div style="font-size:0.8rem; color:#94a3b8;" id="tipText"></div>
+                <div class="score-row" style="display:flex; justify-content: space-around; font-size: 0.9rem;">
+                    <div style="text-align:center;">
+                        <span style="display:block; font-size:1.2rem; font-weight:bold; color:#10b981;"
+                            id="scoreText">0</span>
+                        <span style="color:#94a3b8; font-size:0.75rem;">SCORE</span>
+                    </div>
+                    <div style="text-align:center;">
+                        <span style="display:block; font-size:1.2rem; font-weight:bold; color:#3b82f6;"
+                            id="gramText">0</span>
+                        <span style="color:#94a3b8; font-size:0.75rem;">GRAMMAR</span>
+                    </div>
+                    <div style="text-align:center;">
+                        <span style="display:block; font-size:1.2rem; font-weight:bold; color:#a855f7;"
+                            id="styleText">0</span>
+                        <span style="color:#94a3b8; font-size:0.75rem;">STYLE</span>
+                    </div>
                 </div>
+                <div style="text-align:center; font-size:0.8rem; color:#fbbf24; margin-top:0.5rem;" id="tipText"></div>
             </div>
         </main>
 
@@ -221,6 +245,8 @@
         const micBtn = document.getElementById('micBtn');
         const statusEl = document.getElementById('status');
 
+        let gotResult = false;
+
         if (SpeechRecognition) {
             recognition = new SpeechRecognition();
             recognition.lang = 'de-DE';
@@ -229,6 +255,7 @@
 
             recognition.onstart = () => {
                 isListening = true;
+                gotResult = false;
                 micBtn.classList.add('listening');
                 statusEl.innerText = "Listening... (Speak German)";
                 statusEl.style.color = "#10b981";
@@ -236,17 +263,27 @@
             recognition.onend = () => {
                 isListening = false;
                 micBtn.classList.remove('listening');
-                statusEl.innerText = "Processing...";
-                statusEl.style.color = "#94a3b8";
+                if (gotResult) {
+                    statusEl.innerText = "Processing...";
+                    statusEl.style.color = "#94a3b8";
+                } else {
+                    statusEl.innerText = "Tap mic to start (No speech detected)";
+                    statusEl.style.color = "#fbbf24";
+                }
             };
             recognition.onresult = (e) => {
+                gotResult = true;
                 const transcript = e.results[0][0].transcript;
                 sendChat(transcript);
             };
             recognition.onerror = (e) => {
                 console.error(e);
-                statusEl.innerText = "Error: " + e.error;
-                statusEl.style.color = "#ef4444";
+                if (e.error === 'no-speech') {
+                    // handled by onend
+                } else {
+                    statusEl.innerText = "Error: " + e.error;
+                    statusEl.style.color = "#ef4444";
+                }
             };
         } else {
             statusEl.innerText = "Browser not supported (Use Chrome/Safari)";
@@ -257,6 +294,11 @@
             if (!recognition) return;
             if (isListening) recognition.stop();
             else recognition.start();
+        }
+
+        function sendManual() {
+            const txt = document.getElementById('manualInput').value;
+            if (txt.trim()) sendChat(txt);
         }
 
         // --- Backend API ---
@@ -273,20 +315,34 @@
                 document.getElementById('resultArea').style.display = 'block';
                 document.getElementById('replyText').innerText = data.reply;
 
-                if (data.correction) {
-                    document.getElementById('correctionText').innerText = data.correction;
+                if (data.correction && data.correction.length > 0) {
                     document.getElementById('correctionArea').style.display = 'block';
+                    document.getElementById('correctionText').innerText = data.correction;
                 } else {
                     document.getElementById('correctionArea').style.display = 'none';
                 }
 
-                document.getElementById('scoreText').innerText = data.score;
+                // Calculate Score Locally (Average)
+                const gScore = data.grammar_score || 0;
+                const pScore = data.pronunciation_score || 0;
+                const totalScore = Math.floor((gScore + pScore) / 2);
+
+                document.getElementById('scoreText').innerText = totalScore;
+                document.getElementById('gramText').innerText = gScore;
+                document.getElementById('styleText').innerText = pScore;
+
                 document.getElementById('tipText').innerText = data.pronunciation_tip || "";
 
-                // TTS
-                const u = new SpeechSynthesisUtterance(data.reply);
-                u.lang = 'de-DE';
-                window.speechSynthesis.speak(u);
+                // Play OpenAI TTS audio if available
+                if (data.audio_url) {
+                    const audio = new Audio(data.audio_url);
+                    audio.play().catch(e => console.error("Audio playback failed:", e));
+                } else {
+                    // Fallback to browser TTS
+                    const u = new SpeechSynthesisUtterance(data.reply);
+                    u.lang = 'de-DE';
+                    window.speechSynthesis.speak(u);
+                }
 
                 // Refresh Leaderboard
                 fetchLeaderboard();

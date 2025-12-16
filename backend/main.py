@@ -39,7 +39,15 @@ async def chat_endpoint(req: ChatRequest, request: Request):
 def leaderboard_endpoint():
     return get_top_scores(10)
 
-# Serve Frontend (Minimal)
+@app.get("/logo.png")
+async def get_logo():
+    current_dir = os.path.dirname(os.path.abspath(__file__)) # .../backend
+    # Logo is in project root: .../backend/../tapi_1_logo.png
+    logo_path = os.path.join(current_dir, "../tapi_1_logo.png")
+    if os.path.exists(logo_path):
+        return FileResponse(logo_path)
+    return {"error": "Logo not found"}
+
 @app.get("/")
 async def read_index():
     current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -48,6 +56,14 @@ async def read_index():
     if os.path.exists(frontend_path):
         return FileResponse(frontend_path)
     return {"message": "Genau Tapi! Backend is running. Frontend not found."}
+
+# Serve Audio Files
+@app.get("/audio/{filename}")
+async def get_audio(filename: str):
+    audio_path = os.path.join("static/audio", filename)
+    if os.path.exists(audio_path):
+        return FileResponse(audio_path, media_type="audio/mpeg")
+    return {"error": "Audio not found"}
 
 if __name__ == "__main__":
     import uvicorn

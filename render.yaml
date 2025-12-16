@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: genautapi
+    env: python
+    region: frankfurt # Good for Germany latency
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false # You will enter this in the Render Dashboard manually
