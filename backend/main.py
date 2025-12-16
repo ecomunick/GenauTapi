@@ -21,6 +21,7 @@ app.add_middleware(
 
 class ChatRequest(BaseModel):
     transcript: str
+    streak: int = 1
 
 @app.post("/chat")
 async def chat_endpoint(req: ChatRequest, request: Request):
@@ -28,10 +29,9 @@ async def chat_endpoint(req: ChatRequest, request: Request):
     # 1. AI Logic
     response = call_ai_coach(req.transcript, user_ip)
     
-    # 2. Update Leaderboard (if score is good?)
-    # Only update if they actually said something
+    # 2. Update Leaderboard (Sync persistent steak)
     if len(req.transcript) > 2:
-        update_score(user_ip, response.score)
+        update_score(user_ip, response.score, req.streak)
     
     return response
 

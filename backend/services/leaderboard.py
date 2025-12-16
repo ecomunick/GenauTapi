@@ -23,37 +23,35 @@ def get_location(ip: str):
         print(f"GeoIP Error: {e}")
     return {"country": "Unknown", "city": "Unknown", "countryCode": "UN"}
 
-def update_score(ip: str, score: int, name: str = "Anonymous"):
+def update_score(ip: str, score: int, streak: int = 1, name: str = "Anonymous"):
     """
     Update or add a user's score to the leaderboard.
     """
     loc = get_location(ip)
     
     with _lock:
-        # Check if user exists by IP (simplified identity)
-        # In prod, use a User ID.
         for entry in _leaderboard:
             if entry["ip"] == ip:
-                # Update max score or average? Let's keep MAX score for leaderboard fun
-                if score > entry["score"]:
-                    entry["score"] = score
-                    entry["name"] = name
+                if score > entry.get("top_score", 0):
+                    entry["top_score"] = score
+                # ALWAYS update streak from the client (Persistence Source of Truth)
+                entry["streak"] = streak
                 return entry
         
         # New entry
         new_entry = {
             "ip": ip,
             "name": name,
-            "score": score,
+            "top_score": score, # iOS expects top_score
+            "streak": streak,
             "country": loc.get("country", "Unknown"),
             "city": loc.get("city", "Unknown"),
-            "flag": loc.get("countryCode", "UN") # 2 letter code
+            "flag": loc.get("countryCode", "UN")
         }
         _leaderboard.append(new_entry)
         return new_entry
 
 def get_top_scores(limit: int = 10):
     with _lock:
-        # Sort by score desc
-        sorted_lb = sorted(_leaderboard, key=lambda x: x["score"], reverse=True)
-        return sorted_lb[:limit]
+        # Sort by top_score
+        return sorted(_leaderboard, key=lambda x: x.get("top_score", 0), reverse=True)[:limit]

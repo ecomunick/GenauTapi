@@ -239,7 +239,7 @@ struct ContentView: View {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
-        let body: [String: Any] = ["transcript": lastTranscript]
+        let body: [String: Any] = ["transcript": lastTranscript, "streak": streak]
         request.httpBody = try? JSONSerialization.data(withJSONObject: body)
         
         print("Sending request to \(url.absoluteString) with body: \(body)")
