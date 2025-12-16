@@ -333,12 +333,16 @@
 
                 document.getElementById('tipText').innerText = data.pronunciation_tip || "";
 
-                // Play OpenAI TTS audio if available
-                if (data.audio_url) {
+                // Play Audio (Base64 Priority)
+                if (data.audio_base64) {
+                    const audio = new Audio("data:audio/mp3;base64," + data.audio_base64);
+                    audio.play().catch(e => console.error("Audio playback failed:", e));
+                }
+                else if (data.audio_url) {
                     const audio = new Audio(data.audio_url);
                     audio.play().catch(e => console.error("Audio playback failed:", e));
                 } else {
-                    // Fallback to browser TTS
+                    // Fallback to browser TTS (Robotic)
                     const u = new SpeechSynthesisUtterance(data.reply);
                     u.lang = 'de-DE';
                     window.speechSynthesis.speak(u);
