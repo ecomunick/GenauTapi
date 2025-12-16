@@ -293,11 +293,17 @@ struct ContentView: View {
                                 print("🧠 Memory Updated: \(newMemory)")
                             }
                             
-                            // Play OpenAI TTS audio if available
-                            if let audioURL = json["audio_url"] as? String, !audioURL.isEmpty {
+                            // 1. Prefer Base64 Audio (Robust)
+                            if let b64 = json["audio_base64"] as? String, !b64.isEmpty,
+                               let audioData = Data(base64Encoded: b64) {
+                                self.playAudioFromData(audioData)
+                            }
+                            // 2. Play Audio from URL (Legacy/Local)
+                            else if let audioURL = json["audio_url"] as? String, !audioURL.isEmpty {
                                 self.playAudioFromURL(audioURL)
-                            } else {
-                                // Fallback to iOS TTS if no audio
+                            } 
+                            // 3. Fallback
+                            else {
                                 self.speakWithIOSTTS(self.replyText)
                             }
                         }
@@ -311,6 +317,25 @@ struct ContentView: View {
                 }
             }
         }.resume()
+    }
+    
+    func playAudioFromData(_ data: Data) {
+        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent("temp_speech.mp3")
+        do {
+            try data.write(to: tempURL)
+            print("▶️ Playing Audio from Data")
+            
+            // Ensure Session
+            try AVAudioSession.sharedInstance().setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker])
+            try AVAudioSession.sharedInstance().setActive(true)
+            
+            let playerItem = AVPlayerItem(url: tempURL)
+            audioPlayer = AVPlayer(playerItem: playerItem)
+            audioPlayer?.volume = 1.0
+            audioPlayer?.play()
+        } catch {
+            print("Error writing/playing audio data: \(error)")
+        }
     }
     
     func playAudioFromURL(_ urlPath: String) {

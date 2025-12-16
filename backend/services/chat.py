@@ -1,3 +1,4 @@
+import base64
 import os
 import openai
 import json
@@ -25,6 +26,7 @@ class ChatResponse(BaseModel):
     grammar_score: int
     pronunciation_score: int
     audio_url: str = ""
+    audio_base64: str = "" # New robust field
     memory: str = ""  # AI updates this
 
 def call_ai_coach(transcript: str, user_ip: str, memory_context: str = "") -> ChatResponse:
@@ -79,6 +81,8 @@ Return JSON:
         
         # Generate audio using OpenAI TTS
         audio_url = ""
+        audio_b64 = ""
+        
         if reply_text:
             try:
                 # Generate TTS
@@ -89,21 +93,10 @@ Return JSON:
                     response_format="mp3"
                 )
                 
-                # Save audio file with unique name
-                audio_dir = "static/audio"
-                os.makedirs(audio_dir, exist_ok=True)
+                # Encode to Base64 (Skip FS)
+                audio_b64 = base64.b64encode(speech_response.content).decode('utf-8')
                 
-                # Create unique filename based on content hash
-                file_hash = hashlib.md5(reply_text.encode()).hexdigest()[:8]
-                timestamp = int(time.time())
-                filename = f"tts_{timestamp}_{file_hash}.mp3"
-                filepath = os.path.join(audio_dir, filename)
-                
-                # Save audio to file
-                speech_response.stream_to_file(filepath)
-                
-                # Return relative URL
-                audio_url = f"/audio/{filename}"
+                # Optional: Still save file for local testing? No need.
                 
             except Exception as tts_error:
                 print(f"TTS Error: {tts_error}")
@@ -117,7 +110,9 @@ Return JSON:
             score=avg_score,
             grammar_score=data.get("grammar_score", 0),
             pronunciation_score=data.get("pronunciation_score", 0),
-            audio_url=audio_url
+            audio_url="",
+            audio_base64=audio_b64,
+            memory=data.get("memory", memory_context)
         )
     except Exception as e:
         print(f"AI Error: {e}")
