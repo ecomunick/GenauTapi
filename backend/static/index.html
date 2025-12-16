@@ -250,40 +250,56 @@
         if (SpeechRecognition) {
             recognition = new SpeechRecognition();
             recognition.lang = 'de-DE';
-            recognition.interimResults = false;
-            recognition.continuous = false;
+            recognition.interimResults = true;
+            recognition.continuous = true; // Don't stop on silence
+
+            let finalTranscript = '';
 
             recognition.onstart = () => {
                 isListening = true;
-                gotResult = false;
+                finalTranscript = '';
                 micBtn.classList.add('listening');
-                statusEl.innerText = "Listening... (Speak German)";
+                statusEl.innerText = "Listening... (Tap mic when done)";
                 statusEl.style.color = "#10b981";
+                document.getElementById('status').innerText = "Listening... (Tap mic when done)";
             };
+
             recognition.onend = () => {
                 isListening = false;
                 micBtn.classList.remove('listening');
-                if (gotResult) {
-                    statusEl.innerText = "Processing...";
-                    statusEl.style.color = "#94a3b8";
+                statusEl.innerText = "Processing...";
+                statusEl.style.color = "#94a3b8";
+
+                // Only send if we have text
+                if (finalTranscript.trim().length > 0) {
+                    sendChat(finalTranscript);
                 } else {
-                    statusEl.innerText = "Tap mic to start (No speech detected)";
-                    statusEl.style.color = "#fbbf24";
+                    statusEl.innerText = "Tap mic to start";
+                    statusEl.style.color = "#94a3b8";
                 }
             };
+
             recognition.onresult = (e) => {
-                gotResult = true;
-                const transcript = e.results[0][0].transcript;
-                sendChat(transcript);
+                let interimTranscript = '';
+                for (let i = e.resultIndex; i < e.results.length; ++i) {
+                    if (e.results[i].isFinal) {
+                        finalTranscript += e.results[i][0].transcript + ' ';
+                    } else {
+                        interimTranscript += e.results[i][0].transcript;
+                    }
+                }
+                // Show live preview in status or a new element
+                statusEl.innerText = finalTranscript + interimTranscript;
+                statusEl.style.color = "#fbbf24";
             };
+
             recognition.onerror = (e) => {
                 console.error(e);
                 if (e.error === 'no-speech') {
-                    // handled by onend
-                } else {
-                    statusEl.innerText = "Error: " + e.error;
-                    statusEl.style.color = "#ef4444";
+                    return;
                 }
+                statusEl.innerText = "Error: " + e.error;
+                statusEl.style.color = "#ef4444";
             };
         } else {
             statusEl.innerText = "Browser not supported (Use Chrome/Safari)";
