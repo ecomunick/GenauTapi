@@ -9,7 +9,6 @@ import json
 
 # Services
 from services.chat import call_ai_coach
-from services.leaderboard import update_score, get_top_scores
 from database import get_db, engine
 from models import Base, UserSession, ChatMessage
 
@@ -101,15 +100,7 @@ async def chat_endpoint(req: ChatRequest, request: Request, db: Session = Depend
         db.add(ai_msg)
         db.commit()
     
-    # 2. Update Leaderboard (Sync persistent steak)
-    if len(req.transcript) > 2:
-        update_score(user_ip, response.score, req.streak)
-    
     return response
-
-@app.get("/leaderboard")
-def leaderboard_endpoint():
-    return get_top_scores(10)
 
 @app.get("/logo.png")
 async def get_logo():

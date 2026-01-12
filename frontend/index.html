@@ -38,7 +38,8 @@
 
         @media(min-width: 768px) {
             .container {
-                grid-template-columns: 3fr 2fr;
+                display: flex;
+                justify-content: center;
             }
         }
 
@@ -224,17 +225,6 @@
                 <div style="text-align:center; font-size:0.8rem; color:#fbbf24; margin-top:0.5rem;" id="tipText"></div>
             </div>
         </main>
-
-        <!-- Leaderboard Sidebar -->
-        <aside class="card">
-            <h2>🏆 Global Leaderboard</h2>
-            <ul id="lbList" class="leaderboard-list">
-                <li style="text-align:center; color:#94a3b8;">Loading...</li>
-            </ul>
-            <div style="margin-top:1rem; text-align:center; font-size:0.8rem; color:#64748b;">
-                Ranked by Grammar & Pronunciation
-            </div>
-        </aside>
     </div>
 
     <script>
@@ -344,51 +334,11 @@
                     window.speechSynthesis.speak(u);
                 }
 
-                // Refresh Leaderboard
-                fetchLeaderboard();
-
             } catch (e) {
                 statusEl.innerText = "Network Error";
                 statusEl.style.color = "#ef4444";
             }
         }
-
-        async function fetchLeaderboard() {
-            try {
-                const res = await fetch('/leaderboard');
-                const data = await res.json();
-                const list = document.getElementById('lbList');
-                list.innerHTML = "";
-
-                data.forEach((user, idx) => {
-                    const li = document.createElement('li');
-                    li.className = 'lb-item';
-                    // Flag emoji helper (simple mapping or just text)
-                    // Assuming backend sends 2-char code like 'US', 'DE'
-                    const flag = getFlagEmoji(user.flag);
-
-                    li.innerHTML = `
-                    <div style="display:flex; align-items:center;">
-                        <span class="lb-rank">#${idx + 1}</span>
-                        <span class="lb-flag">${flag}</span>
-                        <span>${user.city || user.ip}</span>
-                    </div>
-                    <strong>${user.score}</strong>
-                `;
-                    list.appendChild(li);
-                });
-            } catch (e) { console.error("LB Error", e); }
-        }
-
-        function getFlagEmoji(countryCode) {
-            if (!countryCode || countryCode === 'UN') return '🏳️';
-            if (countryCode === 'LO') return '💻';
-            return countryCode.toUpperCase().replace(/./g, char => String.fromCodePoint(char.charCodeAt(0) + 127397));
-        }
-
-        // Initial Load
-        fetchLeaderboard();
-
     </script>
 </body>
 
