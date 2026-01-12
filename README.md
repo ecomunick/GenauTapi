@@ -25,41 +25,82 @@ The core experience is built for **iOS**, providing a native, fluid voice interf
 
 ---
 
-## 📱 iOS App (Main Experience)
-The **Genau Tapi iOS App** is the primary way to use the platform.
-- **Native SwiftUI Interface**: Smooth animations and haptic feedback.
-- **Continuous Speech Recognition**: Just speak naturally; the app listens.
-- **Smart Audio Session**: Seamlessly handles recording and playback without cutting off background audio ungracefully.
+## 🏗️ Architecture
 
-*(Code located in `GenauTapi/` folder)*
+```mermaid
+graph TD
+    User[User (iOS/Web)] -->|Audio/Text + Memory| API[FastAPI Backend]
+    API -->|Prompt + Context| LLM[OpenAI GPT-4o]
+    API -->|Text| TTS[OpenAI TTS]
+    API -->|Store Data| DB[(Postgres/SQLite)]
+    
+    subgraph Backend
+    API
+    DB
+    end
+
+    subgraph External Services
+    LLM
+    TTS
+    end
+```
+
+## 🛠️ Technical Stack
+
+- **Backend**: Python (FastAPI)
+  - `openai` (GPT-4o-mini + TTS-1)
+  - `sqlalchemy` + `alembic` (Database & Migrations)
+  - `pydantic` for data validation
+- **Database**: PostgreSQL (Production), SQLite (Dev)
+- **Frontend (iOS)**: Swift (SwiftUI)
+- **Frontend (Web)**: HTML/JS (Vanilla)
+- **Infrastructure**: Docker, Docker Compose, GitHub Actions (CI)
+- **Deployment**: Render
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Docker & Docker Compose
+- OpenAI API Key
+
+### Running Locally (Docker)
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/ecomunick/GenauTapi.git
+   cd GenauTapi
+   ```
+2. Create `.env` file in root or `backend/`:
+   ```bash
+   OPENAI_API_KEY=your_key_here
+   ```
+3. Run with Docker Compose:
+   ```bash
+   docker-compose up --build
+   ```
+4. Access:
+   - Web UI: http://localhost:8000
+   - API Docs: http://localhost:8000/docs
+
+### Running Tests
+Backend integration tests are included using `pytest`.
+```bash
+cd backend
+pip install -r requirements.txt
+pytest tests/
+```
+
+## 🤖 AI Development (Agents)
+This project utilizes AI Agents for development acceleration.
+- **Antigravity (Google DeepMind)**: Used for planning, code generation (backend/frontend), and infrastructure setup.
+- **MCP (Model Context Protocol)**: Enables the agent to interact with the filesystem, run commands, and manage GitHub directly.
+
+See [AGENTS.md](AGENTS.md) for detailed workflow.
 
 ---
 
 ## 🌐 Web Demo
 A web-based "Walkie-Talkie" version is available for testing and demonstration.
 - **URL**: [https://genautapi.onrender.com/](https://genautapi.onrender.com/)
-- **Toggle-to-Talk**: Tap the mic to start listening, speak freely (even with pauses), and tap again to send. Perfect for thoughtful practice.
-
----
-
-## 🛠️ Technical Stack
-
-- **Backend**: Python (FastAPI)
-  - `openai` (GPT-4o-mini + TTS-1)
-  - `pydantic` for data validation
-  - Stateless architecture with client-injected state
-- **Frontend (iOS)**: Swift (SwiftUI)
-  - `AVFoundation` for audio
-  - `Speech` framework for recognition
-- **Frontend (Web)**: HTML/JS (Vanilla)
-  - Web Speech API
-- **Deployment**: Render (Docker/Python)
-
-## 🚀 Deployment
-
-The backend is deployed on **Render** free tier.
-- **Base URL**: `https://genautapi.onrender.com`
-- **Environment Inputs**: `OPENAI_API_KEY`
 
 ---
 
