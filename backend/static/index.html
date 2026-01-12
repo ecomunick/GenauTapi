@@ -38,7 +38,8 @@
 
         @media(min-width: 768px) {
             .container {
-                grid-template-columns: 3fr 2fr;
+                display: flex;
+                justify-content: center;
             }
         }
 
@@ -224,17 +225,6 @@
                 <div style="text-align:center; font-size:0.8rem; color:#fbbf24; margin-top:0.5rem;" id="tipText"></div>
             </div>
         </main>
-
-        <!-- Leaderboard Sidebar -->
-        <aside class="card">
-            <h2>🏆 Global Leaderboard</h2>
-            <ul id="lbList" class="leaderboard-list">
-                <li style="text-align:center; color:#94a3b8;">Loading...</li>
-            </ul>
-            <div style="margin-top:1rem; text-align:center; font-size:0.8rem; color:#64748b;">
-                Ranked by Grammar & Pronunciation
-            </div>
-        </aside>
     </div>
 
     <script>
@@ -250,56 +240,40 @@
         if (SpeechRecognition) {
             recognition = new SpeechRecognition();
             recognition.lang = 'de-DE';
-            recognition.interimResults = true;
-            recognition.continuous = true; // Don't stop on silence
-
-            let finalTranscript = '';
+            recognition.interimResults = false;
+            recognition.continuous = false;
 
             recognition.onstart = () => {
                 isListening = true;
-                finalTranscript = '';
+                gotResult = false;
                 micBtn.classList.add('listening');
-                statusEl.innerText = "Listening... (Tap mic when done)";
+                statusEl.innerText = "Listening... (Speak German)";
                 statusEl.style.color = "#10b981";
-                document.getElementById('status').innerText = "Listening... (Tap mic when done)";
             };
-
             recognition.onend = () => {
                 isListening = false;
                 micBtn.classList.remove('listening');
-                statusEl.innerText = "Processing...";
-                statusEl.style.color = "#94a3b8";
-
-                // Only send if we have text
-                if (finalTranscript.trim().length > 0) {
-                    sendChat(finalTranscript);
-                } else {
-                    statusEl.innerText = "Tap mic to start";
+                if (gotResult) {
+                    statusEl.innerText = "Processing...";
                     statusEl.style.color = "#94a3b8";
+                } else {
+                    statusEl.innerText = "Tap mic to start (No speech detected)";
+                    statusEl.style.color = "#fbbf24";
                 }
             };
-
             recognition.onresult = (e) => {
-                let interimTranscript = '';
-                for (let i = e.resultIndex; i < e.results.length; ++i) {
-                    if (e.results[i].isFinal) {
-                        finalTranscript += e.results[i][0].transcript + ' ';
-                    } else {
-                        interimTranscript += e.results[i][0].transcript;
-                    }
-                }
-                // Show live preview in status or a new element
-                statusEl.innerText = finalTranscript + interimTranscript;
-                statusEl.style.color = "#fbbf24";
+                gotResult = true;
+                const transcript = e.results[0][0].transcript;
+                sendChat(transcript);
             };
-
             recognition.onerror = (e) => {
                 console.error(e);
                 if (e.error === 'no-speech') {
-                    return;
+                    // handled by onend
+                } else {
+                    statusEl.innerText = "Error: " + e.error;
+                    statusEl.style.color = "#ef4444";
                 }
-                statusEl.innerText = "Error: " + e.error;
-                statusEl.style.color = "#ef4444";
             };
         } else {
             statusEl.innerText = "Browser not supported (Use Chrome/Safari)";
@@ -349,66 +323,22 @@
 
                 document.getElementById('tipText').innerText = data.pronunciation_tip || "";
 
-                // Play Audio (Base64 Priority)
-                if (data.audio_base64) {
-                    const audio = new Audio("data:audio/mp3;base64," + data.audio_base64);
-                    audio.play().catch(e => console.error("Audio playback failed:", e));
-                }
-                else if (data.audio_url) {
+                // Play OpenAI TTS audio if available
+                if (data.audio_url) {
                     const audio = new Audio(data.audio_url);
                     audio.play().catch(e => console.error("Audio playback failed:", e));
                 } else {
-                    // Fallback to browser TTS (Robotic)
+                    // Fallback to browser TTS
                     const u = new SpeechSynthesisUtterance(data.reply);
                     u.lang = 'de-DE';
                     window.speechSynthesis.speak(u);
                 }
-
-                // Refresh Leaderboard
-                fetchLeaderboard();
 
             } catch (e) {
                 statusEl.innerText = "Network Error";
                 statusEl.style.color = "#ef4444";
             }
         }
-
-        async function fetchLeaderboard() {
-            try {
-                const res = await fetch('/leaderboard');
-                const data = await res.json();
-                const list = document.getElementById('lbList');
-                list.innerHTML = "";
-
-                data.forEach((user, idx) => {
-                    const li = document.createElement('li');
-                    li.className = 'lb-item';
-                    // Flag emoji helper (simple mapping or just text)
-                    // Assuming backend sends 2-char code like 'US', 'DE'
-                    const flag = getFlagEmoji(user.flag);
-
-                    li.innerHTML = `
-                    <div style="display:flex; align-items:center;">
-                        <span class="lb-rank">#${idx + 1}</span>
-                        <span class="lb-flag">${flag}</span>
-                        <span>${user.city || user.ip}</span>
-                    </div>
-                    <strong>${user.score}</strong>
-                `;
-                    list.appendChild(li);
-                });
-            } catch (e) { console.error("LB Error", e); }
-        }
-
-        function getFlagEmoji(countryCode) {
-            if (!countryCode || countryCode === 'UN') return '🏳️';
-            if (countryCode === 'LO') return '💻';
-            return countryCode.toUpperCase().replace(/./g, char => String.fromCodePoint(char.charCodeAt(0) + 127397));
-        }
-
-        // Initial Load
-        fetchLeaderboard();
-
     </script>
 </body>
 
