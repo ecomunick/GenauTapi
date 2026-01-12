@@ -282,8 +282,16 @@
 
         function toggleMic() {
             if (!recognition) return;
-            if (isListening) recognition.stop();
-            else recognition.start();
+            if (isListening) {
+                recognition.stop();
+            } else {
+                try {
+                    recognition.start();
+                } catch (e) {
+                    console.error("Start error:", e);
+                    statusEl.innerText = "Error starting mic. Refresh page.";
+                }
+            }
         }
 
         function sendManual() {
