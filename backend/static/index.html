@@ -330,15 +330,41 @@
             }
         }
 
+        let currentSessionId = null;
+        let currentMemory = "";
+
+        // Initialize Session
+        async function initSession() {
+            try {
+                const res = await fetch('/sessions', { method: 'POST' });
+                const data = await res.json();
+                currentSessionId = data.id;
+                console.log("Session initialized:", currentSessionId);
+            } catch (e) {
+                console.error("Failed to initialize session:", e);
+            }
+        }
+        initSession();
+
         // --- Backend API ---
         async function sendChat(text) {
             try {
                 const res = await fetch('/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ transcript: text })
+                    body: JSON.stringify({
+                        transcript: text,
+                        session_id: currentSessionId,
+                        memory: currentMemory
+                    })
                 });
                 const data = await res.json();
+
+                // Update memory for next turn
+                if (data.memory) {
+                    currentMemory = data.memory;
+                    console.log("Updated Memory:", currentMemory);
+                }
 
                 // Display Result
                 document.getElementById('resultArea').style.display = 'block';
