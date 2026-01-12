@@ -187,7 +187,8 @@
             <h2>🎙️ Conversation Coach</h2>
             <div id="status" style="text-align: center; color: #94a3b8; height: 1.5rem;">Tap mic to start</div>
 
-            <button id="micBtn" class="mic-btn" onclick="toggleMic()">🎤</button>
+            <button id="micBtn" class="mic-btn" onmousedown="startListening()" onmouseup="stopListening()"
+                ontouchstart="startListening()" ontouchend="stopListening()">🎤</button>
 
             <!-- Text Fallback -->
             <div style="text-align:center; margin-bottom:1rem;">
@@ -242,58 +243,54 @@
             recognition = new SpeechRecognition();
             recognition.lang = 'de-DE';
             recognition.interimResults = false;
-            recognition.continuous = false;
+            recognition.continuous = true;
 
             recognition.onstart = () => {
                 isListening = true;
                 gotResult = false;
                 micBtn.classList.add('listening');
-                statusEl.innerText = "Listening... (Speak German)";
+                statusEl.innerText = "Listening... (Release to send)";
                 statusEl.style.color = "#10b981";
             };
             recognition.onend = () => {
                 isListening = false;
                 micBtn.classList.remove('listening');
                 console.log("Recognition ended. gotResult:", gotResult);
-                if (gotResult) {
-                    statusEl.innerText = "Processing...";
-                    statusEl.style.color = "#94a3b8";
-                } else {
+                if (!gotResult && statusEl.innerText.includes("Listening")) {
                     statusEl.innerText = "Tap mic to start (No speech detected)";
                     statusEl.style.color = "#fbbf24";
                 }
             };
             recognition.onresult = (e) => {
                 gotResult = true;
-                const transcript = e.results[0][0].transcript;
-                sendChat(transcript);
+                let finalTranscript = '';
+                for (let i = e.resultIndex; i < e.results.length; ++i) {
+                    if (e.results[i].isFinal) {
+                        finalTranscript += e.results[i][0].transcript;
+                    }
+                }
+                if (finalTranscript.trim()) {
+                    statusEl.innerText = "Processing...";
+                    statusEl.style.color = "#94a3b8";
+                    sendChat(finalTranscript);
+                }
             };
             recognition.onerror = (e) => {
-                console.error(e);
-                if (e.error === 'no-speech') {
-                    // handled by onend
-                } else {
-                    statusEl.innerText = "Error: " + e.error;
-                    statusEl.style.color = "#ef4444";
-                }
+                console.error("Recognition Error:", e);
             };
         } else {
             statusEl.innerText = "Browser not supported (Use Chrome/Safari)";
             micBtn.disabled = true;
         }
 
-        function toggleMic() {
-            if (!recognition) return;
-            if (isListening) {
-                recognition.stop();
-            } else {
-                try {
-                    recognition.start();
-                } catch (e) {
-                    console.error("Start error:", e);
-                    statusEl.innerText = "Error starting mic. Refresh page.";
-                }
-            }
+        function startListening() {
+            if (!recognition || isListening) return;
+            recognition.start();
+        }
+
+        function stopListening() {
+            if (!recognition || !isListening) return;
+            recognition.stop();
         }
 
         function sendManual() {
