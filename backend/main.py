@@ -114,11 +114,10 @@ async def get_logo():
 @app.get("/")
 async def read_index():
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    # Reliable path: ./static/index.html inside backend
     frontend_path = os.path.join(current_dir, "static/index.html")
     if os.path.exists(frontend_path):
-        return FileResponse(frontend_path)
-    return {"message": "Genau Tapi! Backend is running. Frontend not found (checked static/index.html)."}
+        return FileResponse(frontend_path, headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
+    return {"message": "Genau Tapi! Backend is running."}
 
 # Serve Audio Files
 @app.get("/audio/{filename}")
