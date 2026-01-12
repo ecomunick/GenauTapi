@@ -29,7 +29,7 @@ The core experience is built for **iOS**, providing a native, fluid voice interf
 
 ```mermaid
 graph TD
-    User[User (iOS/Web)] -->|Audio/Text + Memory| API[FastAPI Backend]
+    User["User (iOS/Web)"] -->|Audio/Text + Memory| API[FastAPI Backend]
     API -->|Prompt + Context| LLM[OpenAI GPT-4o]
     API -->|Text| TTS[OpenAI TTS]
     API -->|Store Data| DB[(Postgres/SQLite)]
