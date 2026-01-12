@@ -1,14 +1,20 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
 import os
 import json
 
 # Services
 from services.chat import call_ai_coach
 from services.leaderboard import update_score, get_top_scores
+from database import get_db, engine
+from models import Base, UserSession, ChatMessage
+
+# Ensure tables exist (redundant if using alembic, but safe for dev)
+# Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Genau Tapi! Backend")
 
@@ -23,12 +29,77 @@ class ChatRequest(BaseModel):
     transcript: str
     streak: int = 1
     memory: str = ""  # The AI's summary of previous conversations
+    session_id: str | None = None # Optional session ID to link history
+
+class SessionResponse(BaseModel):
+    id: str
+    created_at: str
+
+@app.post("/sessions", response_model=SessionResponse)
+def create_session(request: Request, db: Session = Depends(get_db)):
+    user_ip = request.client.host
+    new_session = UserSession(user_ip=user_ip)
+    db.add(new_session)
+    db.commit()
+    db.refresh(new_session)
+    return {"id": new_session.id, "created_at": str(new_session.created_at)}
+
+@app.get("/history/{session_id}")
+def get_history(session_id: str, db: Session = Depends(get_db)):
+    session = db.query(UserSession).filter(UserSession.id == session_id).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    # Format messages nicely
+    history = []
+    for msg in session.messages:
+        history.append({
+            "role": msg.role,
+            "content": msg.content,
+            # "meta": msg.meta_data 
+        })
+    return {"messages": history}
 
 @app.post("/chat")
-async def chat_endpoint(req: ChatRequest, request: Request):
+async def chat_endpoint(req: ChatRequest, request: Request, db: Session = Depends(get_db)):
     user_ip = request.client.host
+
+    session = None
+    if req.session_id:
+        session = db.query(UserSession).filter(UserSession.id == req.session_id).first()
+        # If session not found, we could error or just proceed without saving history. 
+        # Let's proceed but warn or just skip saving. 
+        # For strictness: raise HTTPException(status_code=404, detail="Session ID invalid")
+    
+    # Save User Message
+    if session:
+        user_msg = ChatMessage(
+            session_id=session.id,
+            role="user",
+            content=req.transcript,
+            meta_data={"streak": req.streak}
+        )
+        db.add(user_msg)
+        db.commit()
+
     # 1. AI Logic
     response = call_ai_coach(req.transcript, user_ip, req.memory)
+    
+    # Save Assistant Message
+    if session:
+        ai_msg = ChatMessage(
+            session_id=session.id,
+            role="assistant",
+            content=response.reply,
+            meta_data={
+                "score": response.score,
+                "grammar_score": response.grammar_score,
+                "pronunciation_score": response.pronunciation_score,
+                "created_at": str(response.memory) # stash memory if needed?
+            }
+        )
+        db.add(ai_msg)
+        db.commit()
     
     # 2. Update Leaderboard (Sync persistent steak)
     if len(req.transcript) > 2:

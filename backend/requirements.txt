@@ -5,3 +5,6 @@ openai
 requests
 python-dotenv
 aiofiles
+sqlalchemy
+alembic
+psycopg2-binary
