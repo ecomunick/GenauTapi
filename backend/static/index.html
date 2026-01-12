@@ -187,8 +187,8 @@
             <h2>🎙️ Conversation Coach</h2>
             <div id="status" style="text-align: center; color: #94a3b8; height: 1.5rem;">Tap mic to start</div>
 
-            <button id="micBtn" class="mic-btn" onmousedown="startListening()" onmouseup="stopListening()"
-                ontouchstart="startListening()" ontouchend="stopListening()">🎤</button>
+            <button id="micBtn" class="mic-btn" onpointerdown="startListening(event)" onpointerup="stopListening(event)"
+                onpointerleave="stopListening(event)">🎤</button>
 
             <!-- Text Fallback -->
             <div style="text-align:center; margin-bottom:1rem;">
@@ -233,64 +233,105 @@
         // --- Web Speech API ---
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         let recognition;
-        let isListening = false;
         const micBtn = document.getElementById('micBtn');
         const statusEl = document.getElementById('status');
-
+        let isListening = false;
         let gotResult = false;
+        let capturedTranscript = "";
+        let userIsHolding = false;
 
         if (SpeechRecognition) {
             recognition = new SpeechRecognition();
             recognition.lang = 'de-DE';
-            recognition.interimResults = false;
+            recognition.interimResults = true; // See updates immediately
             recognition.continuous = true;
 
             recognition.onstart = () => {
                 isListening = true;
                 gotResult = false;
-                micBtn.classList.add('listening');
                 statusEl.innerText = "Listening... (Release to send)";
                 statusEl.style.color = "#10b981";
             };
-            recognition.onend = () => {
-                isListening = false;
-                micBtn.classList.remove('listening');
-                console.log("Recognition ended. gotResult:", gotResult);
-                if (!gotResult && statusEl.innerText.includes("Listening")) {
-                    statusEl.innerText = "Tap mic to start (No speech detected)";
-                    statusEl.style.color = "#fbbf24";
-                }
-            };
+
             recognition.onresult = (e) => {
-                gotResult = true;
-                let finalTranscript = '';
+                let currentBatch = "";
                 for (let i = e.resultIndex; i < e.results.length; ++i) {
                     if (e.results[i].isFinal) {
-                        finalTranscript += e.results[i][0].transcript;
+                        gotResult = true;
+                        capturedTranscript += e.results[i][0].transcript + " ";
+                    } else {
+                        // Interim results can show feedback
+                        currentBatch = e.results[i][0].transcript;
                     }
                 }
-                if (finalTranscript.trim()) {
-                    statusEl.innerText = "Processing...";
-                    statusEl.style.color = "#94a3b8";
-                    sendChat(finalTranscript);
+                if (currentBatch && userIsHolding) {
+                    statusEl.innerText = "Heard: " + currentBatch;
                 }
             };
+
+            recognition.onend = () => {
+                isListening = false;
+                console.log("Recognition ended. gotResult:", gotResult, "holding:", userIsHolding);
+
+                // Final cleanup UI if not holding
+                if (!userIsHolding) {
+                    micBtn.classList.remove('listening');
+                    if (capturedTranscript.trim()) {
+                        statusEl.innerText = "Processing...";
+                        statusEl.style.color = "#94a3b8";
+                        sendChat(capturedTranscript.trim());
+                    } else if (statusEl.innerText.includes("Heard") || statusEl.innerText.includes("Listening")) {
+                        statusEl.innerText = "Tap mic to start (No speech detected)";
+                        statusEl.style.color = "#fbbf24";
+                    }
+                } else {
+                    // It ended while they were holding (browser timeout?)
+                    // Restart only if they are still holding
+                    try { recognition.start(); } catch (e) { }
+                }
+            };
+
             recognition.onerror = (e) => {
-                console.error("Recognition Error:", e);
+                console.error("Recognition Error:", e.error);
+                if (e.error === 'no-speech' && userIsHolding) {
+                    // Ignore no-speech errors while holding, just let onend restart it
+                } else if (e.error !== 'aborted') {
+                    statusEl.innerText = "Error: " + e.error;
+                }
             };
         } else {
             statusEl.innerText = "Browser not supported (Use Chrome/Safari)";
             micBtn.disabled = true;
         }
 
-        function startListening() {
-            if (!recognition || isListening) return;
-            recognition.start();
+        function startListening(e) {
+            if (e) {
+                e.preventDefault();
+                // Ensure button visually reacts immediately
+                micBtn.classList.add('listening');
+            }
+            if (userIsHolding) return;
+            userIsHolding = true;
+            capturedTranscript = "";
+            gotResult = false;
+
+            try {
+                recognition.start();
+            } catch (err) { console.warn("Mic already started:", err); }
         }
 
-        function stopListening() {
-            if (!recognition || !isListening) return;
-            recognition.stop();
+        function stopListening(e) {
+            if (e) e.preventDefault();
+            if (!userIsHolding) return;
+            userIsHolding = false;
+
+            // UI
+            micBtn.classList.remove('listening');
+
+            // Stop recognition - onend will handle the actual sending
+            if (recognition) {
+                recognition.stop();
+            }
         }
 
         function sendManual() {
