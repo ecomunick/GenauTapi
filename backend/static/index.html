@@ -55,6 +55,7 @@
             margin: 0 0 0.5rem 0;
             background: linear-gradient(to right, #8b5cf6, #ec4899);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
@@ -253,6 +254,7 @@
             recognition.onend = () => {
                 isListening = false;
                 micBtn.classList.remove('listening');
+                console.log("Recognition ended. gotResult:", gotResult);
                 if (gotResult) {
                     statusEl.innerText = "Processing...";
                     statusEl.style.color = "#94a3b8";
@@ -332,11 +334,14 @@
                 document.getElementById('tipText').innerText = data.pronunciation_tip || "";
 
                 // Play OpenAI TTS audio if available
-                if (data.audio_url) {
+                if (data.audio_base64) {
+                    const audio = new Audio("data:audio/mpeg;base64," + data.audio_base64);
+                    audio.play().catch(e => console.error("Audio playback failed:", e));
+                } else if (data.audio_url) {
                     const audio = new Audio(data.audio_url);
                     audio.play().catch(e => console.error("Audio playback failed:", e));
                 } else {
-                    // Fallback to browser TTS
+                    // Fallback to browser TTS (Robotic)
                     const u = new SpeechSynthesisUtterance(data.reply);
                     u.lang = 'de-DE';
                     window.speechSynthesis.speak(u);
