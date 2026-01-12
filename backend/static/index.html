@@ -172,9 +172,9 @@
                 onpointerleave="stopListening(event)" onpointercancel="stopListening(event)"
                 oncontextmenu="return false;">🎤</button>
 
-            <!-- Text Fallback -->
             <div style="text-align:center; margin-bottom:1rem;">
                 <input type="text" id="manualInput" placeholder="Or type German here..."
+                    onkeydown="if(event.key === 'Enter') sendManual()"
                     style="padding:0.5rem; border-radius:0.5rem; border:1px solid #334155; width:60%; background:#0f172a; color:white;">
                 <button onclick="sendManual()"
                     style="padding:0.5rem 1rem; border-radius:0.5rem; border:none; background:#3b82f6; color:white; cursor:pointer;">Send</button>
@@ -322,8 +322,12 @@
         }
 
         function sendManual() {
-            const txt = document.getElementById('manualInput').value;
-            if (txt.trim()) sendChat(txt);
+            const inputEl = document.getElementById('manualInput');
+            const txt = inputEl.value;
+            if (txt.trim()) {
+                sendChat(txt);
+                inputEl.value = ""; // Clear after sending
+            }
         }
 
         // --- Backend API ---
