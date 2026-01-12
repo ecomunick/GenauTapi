@@ -1,0 +1,164 @@
+openapi: 3.1.0
+info:
+  title: Genau Tapi! Backend
+  version: 0.1.0
+paths:
+  /chat:
+    post:
+      summary: Chat Endpoint
+      operationId: chat_endpoint_chat_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+  /leaderboard:
+    get:
+      summary: Leaderboard Endpoint
+      operationId: leaderboard_endpoint_leaderboard_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ScoreEntry'
+  /sessions:
+    post:
+      summary: Create Session
+      operationId: create_session
+      responses:
+        '200':
+          description: Session Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionResponse'
+  /history/{session_id}:
+    get:
+      summary: Get Chat History
+      operationId: get_history
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: History
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HistoryResponse'
+components:
+  schemas:
+    ChatRequest:
+      properties:
+        transcript:
+          type: string
+          title: Transcript
+        streak:
+          type: integer
+          default: 1
+          title: Streak
+        memory:
+          type: string
+          default: ""
+          title: Memory
+        session_id:
+          type: string
+          title: Session ID
+          nullable: true
+      required:
+        - transcript
+      type: object
+      title: ChatRequest
+    ChatResponse:
+      properties:
+        reply:
+          type: string
+          title: Reply
+        correction:
+          type: string
+          default: ""
+          title: Correction
+        should_repeat:
+          type: boolean
+          default: false
+          title: Should Repeat
+        pronunciation_tip:
+          type: string
+          default: ""
+          title: Pronunciation Tip
+        score:
+          type: integer
+          title: Score
+        grammar_score:
+          type: integer
+          title: Grammar Score
+        pronunciation_score:
+          type: integer
+          title: Pronunciation Score
+        audio_url:
+          type: string
+          default: ""
+          title: Audio Url
+        audio_base64:
+          type: string
+          default: ""
+          title: Audio Base64
+        memory:
+          type: string
+          default: ""
+          title: Memory
+      required:
+        - reply
+        - score
+        - grammar_score
+        - pronunciation_score
+      type: object
+      title: ChatResponse
+    ScoreEntry:
+        type: object
+        properties:
+            ip:
+                type: string
+            score:
+                type: integer
+    SessionResponse:
+      properties:
+        id:
+          type: string
+          title: Session ID
+        created_at:
+          type: string
+          title: Created At
+      required:
+        - id
+        - created_at
+      type: object
+      title: SessionResponse
+    HistoryResponse:
+        type: object
+        properties:
+            messages:
+                type: array
+                items:
+                    type: object
+                    properties:
+                        role:
+                            type: string
+                        content:
+                            type: string
+        title: HistoryResponse
