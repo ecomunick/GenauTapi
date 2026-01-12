@@ -327,6 +327,9 @@
             capturedTranscript = "";
             gotResult = false;
 
+            statusEl.innerText = "Starting...";
+            statusEl.style.color = "#8b5cf6";
+
             try {
                 recognition.start();
             } catch (err) { console.warn("Mic already started:", err); }
@@ -398,7 +401,8 @@
                 }
 
             } catch (e) {
-                statusEl.innerText = "Network Error";
+                console.error("Chat Error:", e);
+                statusEl.innerText = "Network Error: " + (e.message || "Unknown");
                 statusEl.style.color = "#ef4444";
             }
         }

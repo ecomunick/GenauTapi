@@ -14,5 +14,8 @@ COPY . .
 # Expose port (FastAPI default)
 EXPOSE 8000
 
-# Run the application
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Ensure start.sh is executable
+RUN chmod +x start.sh
+
+# Run the application via start script
+CMD ["./start.sh"]
